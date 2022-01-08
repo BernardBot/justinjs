@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Title of the document</title>
+</head>
+<body>
+    <textarea id="text" rows="10" cols="50">Type something and see parsed result.</textarea>
+    <div id="result"></div>
+    <script src="nearley.js"></script>
+    <script src="grammar.js"></script>
+    <script>
+        // https://github.com/kach/nearley/issues/156
+        function parser(text) {
+            const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
+            parser.feed(text);
+            return parser.results;
+        }
+
+        const text = document.getElementById("text");
+        const result = document.getElementById("result");
+        text.oninput = function() {
+            const parsed = parser(text.value);
+            result.innerHTML = JSON.stringify(parsed, null, 2);
+        }
+    </script>
+</body>
+</html>

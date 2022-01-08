@@ -1,0 +1,2 @@
+# chessjs
+Chess in JavaScript
