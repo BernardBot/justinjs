@@ -68,8 +68,45 @@ class Graph {
         return edges;
     }
 
-    debug_print() {
-        console.log(this._adj);
-        console.log(this._node);
+    static from_nodes(nodes) {
+        let G = new Graph();
+        for (let node of nodes) {
+            G.add_node(node);
+        }
+        return G;
+    }
+
+    static from_edges(edges) {
+        let G = new Graph();
+        for (let [u, v] of edges) {
+            G.add_edge(u, v);
+        }
+        return G;
+    }
+
+    static complete_graph(n) {
+        let G = new Graph();
+        for (let i = 0; i < n; i++) {
+            for (let j = 0; j < n; j++) {
+                G.add_edge(i, j);
+            }
+        }
+        return G;
+    }
+
+    static random_graph(n, p) {
+        let G = new Graph();
+        for (let i = 0; i < n; i++) {
+            G.add_node(i);
+        }
+        for (let i = 0; i < n; i++) {
+            for (let j = i + 1; j < n; j++) {
+                if (Math.random() < p) {
+                    G.add_edge(i, j);
+                }
+            }
+        }
+        return G;
     }
 }
+
