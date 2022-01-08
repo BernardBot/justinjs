@@ -109,4 +109,102 @@ class Graph {
         return G;
     }
 }
+function plot_graph_d3_static(nodes, edges, svg, radius=5) {
+    // clear all elements in svg
+    svg.selectAll("*").remove();
 
+    d3
+        .forceSimulation(nodes)
+        .force("link", d3.forceLink(edges))
+        .force("charge", d3.forceManyBody())
+        .force("x", d3.forceX())
+        .force("y", d3.forceY())
+        .stop();
+
+    svg
+        .append("g")
+        .attr("stroke", "black")
+        .attr("fill", "white")
+        .selectAll("circle")
+        .data(nodes)
+        .join("circle")
+        .attr("r", radius)
+        .attr("cx", d => d.x)
+        .attr("cy", d => d.y);
+
+    svg
+        .append("g")
+        .attr("stroke", "black")
+        .selectAll("line")
+        .data(edges)
+        .join("line")
+        .attr("x1", d => d.source.x)
+        .attr("y1", d => d.source.y)
+        .attr("x2", d => d.target.x)
+        .attr("y2", d => d.target.y);
+}
+
+function plot_graph_d3(nodes, edges, svg, radius=5) {
+    // clear all elements in svg
+    svg.selectAll("*").remove();
+
+    const simulation = d3
+        .forceSimulation(nodes)
+        .force("link", d3.forceLink(edges))
+        .force("charge", d3.forceManyBody())
+        .force("x", d3.forceX())
+        .force("y", d3.forceY());
+
+    const _nodes = svg
+        .append("g")
+        .attr("stroke", "black")
+        .attr("fill", "white")
+        .selectAll("circle")
+        .data(nodes)
+        .join("circle")
+        .attr("r", radius)
+        .call(drag_d3(simulation));
+
+    const _edges = svg
+        .append("g")
+        .attr("stroke", "black")
+        .selectAll("line")
+        .data(edges)
+        .join("line");
+
+    simulation.on("tick", () => {
+        _nodes
+            .attr("cx", d => d.x)
+            .attr("cy", d => d.y);
+
+        _edges
+            .attr("x1", d => d.source.x)
+            .attr("y1", d => d.source.y)
+            .attr("x2", d => d.target.x)
+            .attr("y2", d => d.target.y);
+    });
+}
+
+function drag_d3(simulation) {
+    function dragstarted(event, d) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+    }
+
+    function dragged(event, d) {
+        d.fx = event.x;
+        d.fy = event.y;
+    }
+
+    function dragended(event, d) {
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+    }
+
+    return d3.drag()
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended);
+}
