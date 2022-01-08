@@ -1,10 +1,4 @@
-let G = new Graph();
-G.add_node("A");
-G.add_node("B");
-
-G.add_edge("A", "B");
-
-G = Graph.random_graph(100, .01);
+G = Graph.random_graph(100, .015);
 
 links = G.edges().map(edge => ({ source: edge[0], target: edge[1] }));
 nodes = G.nodes().map(node => ({ id: node }));
@@ -14,6 +8,7 @@ width = 600;
 
 radius = 3.5;
 
+// make this swappable?
 const simulation = d3.forceSimulation(nodes)
     .force("link", d3.forceLink(links).id(d => d.id).distance(0).strength(1))
     .force("charge", d3.forceManyBody().strength(-50))
