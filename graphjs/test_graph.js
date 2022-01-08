@@ -4,14 +4,15 @@ G.add_node("B");
 
 G.add_edge("A", "B");
 
-G = Graph.complete_graph(5);
+G = Graph.random_graph(100, .01);
 
 links = G.edges().map(edge => ({ source: edge[0], target: edge[1] }));
-nodes = G.nodes().map(node => ({ id: node, data : { name : node }}));
+nodes = G.nodes().map(node => ({ id: node }));
 
 height = 600;
 width = 600;
 
+radius = 3.5;
 
 const simulation = d3.forceSimulation(nodes)
     .force("link", d3.forceLink(links).id(d => d.id).distance(0).strength(1))
@@ -24,26 +25,22 @@ const svg = d3.select("body")
     .attr("viewBox", [-width / 2, -height / 2, width, height]);
 
 const link = svg.append("g")
-    .attr("stroke", "#999")
-    .attr("stroke-opacity", 0.6)
+    .attr("stroke", "black")
     .selectAll("line")
     .data(links)
     .join("line");
 
 const node = svg.append("g")
-    .attr("fill", "#fff")
-    .attr("stroke", "#000")
-    .attr("stroke-width", 1.5)
+    .attr("stroke", "black")
+    .attr("fill", "white")
     .selectAll("circle")
     .data(nodes)
     .join("circle")
-    .attr("fill", d => d.children ? null : "#000")
-    .attr("stroke", d => d.children ? null : "#fff")
-    .attr("r", 3.5)
+    .attr("r", radius)
     .call(drag(simulation));
 
 node.append("title")
-    .text(d => d.data.name);
+    .text(d => d.id);
 
 simulation.on("tick", () => {
     link
