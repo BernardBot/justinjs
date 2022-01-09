@@ -145,6 +145,7 @@ class Graph {
 }
 
 // TODO
+// - Do I want dragging AND adding/remove nodes?
 // - seperate style from graph
 //      edges: stroke
 //      nodes: r, fill
@@ -171,10 +172,29 @@ class D3Graph extends Graph {
         .attr("height", this.height)
         .attr("width", this.width);
         
+        // https://github.com/d3/d3-force#links
+        this.force_link = d3
+        .forceLink()
+        .id(d => d.id) // default is '.index'
+        .strength(0.2)
+        .distance(100);
+        
+        // https://github.com/d3/d3-force#many-body
+        this.force_charge = d3
+        .forceManyBody()
+        .strength(-300)
+        .distanceMax(this.width / 2);
+        
+        // https://github.com/d3/d3-force#centering
+        this.force_center = d3
+        .forceCenter(0, 0);
+        
+        // https://github.com/d3/d3-force#simulation
         this.simulation = d3
         .forceSimulation()
-        .force("link", d3.forceLink().id(d => d.id))
-        .force("charge", d3.forceManyBody())
+        .force("link", this.force_link)
+        .force("charge", this.force_charge)
+        .force("center", this.force_center)
         .force("x", d3.forceX())
         .force("y", d3.forceY())
         .on("tick", () => {
@@ -229,7 +249,9 @@ class D3Graph extends Graph {
         .attr("class", "nodes")
         .attr("r", this.node_radius)
         .attr("fill", "red")
-        .call(drag(this.simulation));
+        .call(drag(this.simulation))
+        .append("title") // order call/append matters!
+        .text(d => d.id);
         
         this.simulation.nodes(nodes);
         this.simulation.force("link").links(edges);
