@@ -7,13 +7,14 @@ We use object operators:
 - delete
 
 Free from: https://networkx.org/documentation/stable/_modules/networkx/classes/graph.html#Graph
+Same idea by dendihandian (actually uses networkx): https://github.com/dendihandian/grafify
 */
 class Graph {
     constructor() {
         this._adj = {};
         this._node = {};
     }
-
+    
     // TODO: handle node attributes
     add_node(node) {
         if (node in this._node) {
@@ -22,7 +23,7 @@ class Graph {
         this._adj[node] = {};
         this._node[node] = {};
     }
-
+    
     remove_node(node) {
         if (!(node in this._node)) {
             return;
@@ -33,7 +34,7 @@ class Graph {
         delete this._adj[node];
         delete this._node[node];
     }
-
+    
     add_edge(u, v) {
         if (!(u in this._node)) {
             this.add_node(u);
@@ -44,7 +45,7 @@ class Graph {
         this._adj[u][v] = {};
         this._adj[v][u] = {};
     }
-
+    
     remove_edge(u, v) {
         if (!(u in this._node) || !(v in this._node)) {
             return;
@@ -54,11 +55,11 @@ class Graph {
             delete this._adj[v][u];
         }
     }
-
+    
     nodes() {
         return Object.keys(this._node);
     }
-
+    
     edges() {
         let edges = [];
         for (let u in this._adj) {
@@ -68,7 +69,7 @@ class Graph {
         }   
         return edges;
     }
-
+    
     static from_nodes(nodes) {
         let G = new this();
         for (let node of nodes) {
@@ -76,7 +77,7 @@ class Graph {
         }
         return G;
     }
-
+    
     static from_edges(edges) {
         let G = new this();
         for (let [u, v] of edges) {
@@ -84,7 +85,39 @@ class Graph {
         }
         return G;
     }
+    
+    static from_object(obj) {
+        let G = new this();
+        
+        let objs = [obj];
+        while (objs.length > 0) {
+            let obj = objs.pop();
+            
+            if (typeof obj == "object") {
+                for (let u in obj) {
+                    if (typeof obj[u] == "object") {
 
+                        for (let v in obj[u]) {
+                            G.add_edge(u, v);
+                        }
+
+                        objs.push(obj[u]);
+                    } else {
+                        G.add_edge(u, obj[u]);
+                    }
+                }
+            } else {
+                G.add_node(obj);
+            }
+        }
+        
+        return G;
+    }
+
+    static from_json(json) {
+        return this.from_object(JSON.parse(json));
+    }
+    
     static complete_graph(n) {
         let G = new this();
         for (let i = 0; i < n; i++) {
@@ -94,7 +127,7 @@ class Graph {
         }
         return G;
     }
-
+    
     static random_graph(n, p) {
         let G = new this();
         for (let i = 0; i < n; i++) {
@@ -115,7 +148,7 @@ class Graph {
 // - seperate style from graph
 //      edges: stroke
 //      nodes: r, fill
-//      labels: stroke
+//      labels: font-size, stroke
 // - add labels to nodes
 // - parameterize all the things
 //      svg
@@ -123,46 +156,46 @@ class Graph {
 class D3Graph extends Graph {
     constructor() {
         super();
-
+        
         this.width = 600;
         this.height = 600;
-
+        
         this.node_radius = 7;
-
+        
         // TODO: add event handlers to SVG
         this.svg = d3
-            .select("body")
-            .append("svg")
-            .attr("viewBox", [-this.width / 2, -this.height / 2, this.width, this.height])
-            .attr("height", this.height)
-            .attr("width", this.width);
+        .select("body")
+        .append("svg")
+        .attr("viewBox", [-this.width / 2, -this.height / 2, this.width, this.height])
+        .attr("height", this.height)
+        .attr("width", this.width);
         
         this.simulation = d3
-            .forceSimulation()
-            .force("link", d3.forceLink().id(d => d.id))
-            .force("charge", d3.forceManyBody())
-            .force("x", d3.forceX())
-            .force("y", d3.forceY())
-            .on("tick", () => {
-                this.svg
-                    .selectAll(".nodes")
-                    .attr("cx", d => d.x)
-                    .attr("cy", d => d.y);
-                
-                this.svg
-                    .selectAll(".edges")
-                    .attr("x1", d => d.source.x)
-                    .attr("y1", d => d.source.y)
-                    .attr("x2", d => d.target.x)
-                    .attr("y2", d => d.target.y);
-
-                this.svg
-                    .selectAll(".labels")
-                    .attr("x", d => d.x - this.node_radius / 3)
-                    .attr("y", d => d.y + this.node_radius / 3);
-            });
+        .forceSimulation()
+        .force("link", d3.forceLink().id(d => d.id))
+        .force("charge", d3.forceManyBody())
+        .force("x", d3.forceX())
+        .force("y", d3.forceY())
+        .on("tick", () => {
+            this.svg
+            .selectAll(".nodes")
+            .attr("cx", d => d.x)
+            .attr("cy", d => d.y);
+            
+            this.svg
+            .selectAll(".edges")
+            .attr("x1", d => d.source.x)
+            .attr("y1", d => d.source.y)
+            .attr("x2", d => d.target.x)
+            .attr("y2", d => d.target.y);
+            
+            this.svg
+            .selectAll(".labels")
+            .attr("x", d => d.x - this.node_radius / 3)
+            .attr("y", d => d.y + this.node_radius / 3);
+        });
     }
-
+    
     nodes() {
         let nodes = [];
         for (let node in this._node) {
@@ -180,34 +213,34 @@ class D3Graph extends Graph {
         }
         return edges;
     }
-
+    
     plot() {
         let nodes = this.nodes();
         let edges = this.edges();
-
+        
         // order of updating matters!
         this.svg
-            .selectAll(".edges")
-            .data(edges)
-            .join("line")
-            .attr("class", "edges")
-            .attr("stroke", "red");
+        .selectAll(".edges")
+        .data(edges)
+        .join("line")
+        .attr("class", "edges")
+        .attr("stroke", "grey");
         
         this.svg
-            .selectAll(".nodes")
-            .data(nodes)
-            .join("circle")
-            .attr("class", "nodes")
-            .attr("r", this.node_radius)
-            .attr("fill", "grey");
-
+        .selectAll(".nodes")
+        .data(nodes)
+        .join("circle")
+        .attr("class", "nodes")
+        .attr("r", this.node_radius)
+        .attr("fill", "red");
+        
         this.svg
-            .selectAll(".labels")
-            .data(nodes)
-            .join("text")
-            .text(d => d.id)
-            .attr("class", "labels")
-            .attr("font-size", (3 + this.node_radius) + "px");
+        .selectAll(".labels")
+        .data(nodes)
+        .join("text")
+        .text(d => d.id)
+        .attr("class", "labels")
+        .attr("font-size", "12px");
         
         this.simulation.nodes(nodes);
         this.simulation.force("link").links(edges);
