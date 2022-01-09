@@ -69,7 +69,7 @@ class Graph {
     }
 
     static from_nodes(nodes) {
-        let G = new Graph();
+        let G = new this();
         for (let node of nodes) {
             G.add_node(node);
         }
@@ -77,7 +77,7 @@ class Graph {
     }
 
     static from_edges(edges) {
-        let G = new Graph();
+        let G = new this();
         for (let [u, v] of edges) {
             G.add_edge(u, v);
         }
@@ -85,7 +85,7 @@ class Graph {
     }
 
     static complete_graph(n) {
-        let G = new Graph();
+        let G = new this();
         for (let i = 0; i < n; i++) {
             for (let j = 0; j < n; j++) {
                 G.add_edge(i, j);
@@ -95,7 +95,7 @@ class Graph {
     }
 
     static random_graph(n, p) {
-        let G = new Graph();
+        let G = new this();
         for (let i = 0; i < n; i++) {
             G.add_node(i);
         }
@@ -109,102 +109,83 @@ class Graph {
         return G;
     }
 }
-function plot_graph_d3_static(nodes, edges, svg, radius=5) {
-    // clear all elements in svg
-    svg.selectAll("*").remove();
 
-    d3
-        .forceSimulation(nodes)
-        .force("link", d3.forceLink(edges))
-        .force("charge", d3.forceManyBody())
-        .force("x", d3.forceX())
-        .force("y", d3.forceY())
-        .stop();
+// TODO
+// - seperate style from graph
+// - add labels to nodes
+class D3Graph extends Graph {
+    constructor() {
+        super();
 
-    svg
-        .append("g")
-        .attr("stroke", "black")
-        .attr("fill", "white")
-        .selectAll("circle")
-        .data(nodes)
-        .join("circle")
-        .attr("r", radius)
-        .attr("cx", d => d.x)
-        .attr("cy", d => d.y);
+        const width = 600;
+        const height = 600;
 
-    svg
-        .append("g")
-        .attr("stroke", "black")
-        .selectAll("line")
-        .data(edges)
-        .join("line")
-        .attr("x1", d => d.source.x)
-        .attr("y1", d => d.source.y)
-        .attr("x2", d => d.target.x)
-        .attr("y2", d => d.target.y);
-}
-
-function plot_graph_d3(nodes, edges, svg, radius=5) {
-    // clear all elements in svg
-    svg.selectAll("*").remove();
-
-    const simulation = d3
-        .forceSimulation(nodes)
-        .force("link", d3.forceLink(edges))
-        .force("charge", d3.forceManyBody())
-        .force("x", d3.forceX())
-        .force("y", d3.forceY());
-
-    const _nodes = svg
-        .append("g")
-        .attr("stroke", "black")
-        .attr("fill", "white")
-        .selectAll("circle")
-        .data(nodes)
-        .join("circle")
-        .attr("r", radius)
-        .call(drag_d3(simulation));
-
-    const _edges = svg
-        .append("g")
-        .attr("stroke", "black")
-        .selectAll("line")
-        .data(edges)
-        .join("line");
-
-    simulation.on("tick", () => {
-        _nodes
-            .attr("cx", d => d.x)
-            .attr("cy", d => d.y);
-
-        _edges
-            .attr("x1", d => d.source.x)
-            .attr("y1", d => d.source.y)
-            .attr("x2", d => d.target.x)
-            .attr("y2", d => d.target.y);
-    });
-}
-
-function drag_d3(simulation) {
-    function dragstarted(event, d) {
-        if (!event.active) simulation.alphaTarget(0.3).restart();
-        d.fx = d.x;
-        d.fy = d.y;
+        this.svg = d3
+            .select("body")
+            .append("svg")
+            .attr("viewBox", [-width / 2, -height / 2, width, height])
+            .attr("height", height)
+            .attr("width", width);
+        
+        this.simulation = d3
+            .forceSimulation()
+            .force("link", d3.forceLink().id(d => d.id))
+            .force("charge", d3.forceManyBody())
+            .force("x", d3.forceX())
+            .force("y", d3.forceY())
+            .on("tick", () => {
+                this.svg
+                    .selectAll(".nodes")
+                    .attr("cx", d => d.x)
+                    .attr("cy", d => d.y);
+                
+                this.svg
+                    .selectAll(".edges")
+                    .attr("x1", d => d.source.x)
+                    .attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x)
+                    .attr("y2", d => d.target.y);
+            });
     }
 
-    function dragged(event, d) {
-        d.fx = event.x;
-        d.fy = event.y;
+    nodes() {
+        let nodes = [];
+        for (let node in this._node) {
+            nodes.push({ id: node });
+        }
+        return nodes;
+    }
+    
+    edges() {
+        let edges = [];
+        for (let u in this._adj) {
+            for (let v in this._adj[u]) {
+                edges.push({ source: u, target: v });
+            }
+        }
+        return edges;
     }
 
-    function dragended(event, d) {
-        if (!event.active) simulation.alphaTarget(0);
-        d.fx = null;
-        d.fy = null;
-    }
+    plot() {
+        let nodes = this.nodes();
+        let edges = this.edges();
 
-    return d3.drag()
-        .on("start", dragstarted)
-        .on("drag", dragged)
-        .on("end", dragended);
+        this.svg
+            .selectAll(".nodes")
+            .data(nodes)
+            .join("circle")
+            .attr("class", "nodes")
+            .attr("r", 5);
+
+        this.svg
+            .selectAll(".edges")
+            .data(edges)
+            .join("line")
+            .attr("class", "edges")
+            .attr("stroke", "black");
+
+        this.simulation.nodes(nodes);
+        this.simulation.force("link").links(edges);
+        this.simulation.restart();
+    }
 }
