@@ -91,16 +91,16 @@ class Graph {
         
         let objs = [obj];
         while (objs.length > 0) {
-            let obj = objs.pop();
+            obj = objs.pop();
             
             if (typeof obj == "object") {
                 for (let u in obj) {
                     if (typeof obj[u] == "object") {
-
+                        
                         for (let v in obj[u]) {
                             G.add_edge(u, v);
                         }
-
+                        
                         objs.push(obj[u]);
                     } else {
                         G.add_edge(u, obj[u]);
@@ -113,7 +113,7 @@ class Graph {
         
         return G;
     }
-
+    
     static from_json(json) {
         return this.from_object(JSON.parse(json));
     }
@@ -153,6 +153,7 @@ class Graph {
 // - parameterize all the things
 //      svg
 //      simulation
+// - add text layout simulation
 class D3Graph extends Graph {
     constructor() {
         super();
@@ -188,11 +189,6 @@ class D3Graph extends Graph {
             .attr("y1", d => d.source.y)
             .attr("x2", d => d.target.x)
             .attr("y2", d => d.target.y);
-            
-            this.svg
-            .selectAll(".labels")
-            .attr("x", d => d.x - this.node_radius / 3)
-            .attr("y", d => d.y + this.node_radius / 3);
         });
     }
     
@@ -224,7 +220,7 @@ class D3Graph extends Graph {
         .data(edges)
         .join("line")
         .attr("class", "edges")
-        .attr("stroke", "grey");
+        .attr("stroke", "blue");
         
         this.svg
         .selectAll(".nodes")
@@ -232,18 +228,35 @@ class D3Graph extends Graph {
         .join("circle")
         .attr("class", "nodes")
         .attr("r", this.node_radius)
-        .attr("fill", "red");
-        
-        this.svg
-        .selectAll(".labels")
-        .data(nodes)
-        .join("text")
-        .text(d => d.id)
-        .attr("class", "labels")
-        .attr("font-size", "12px");
+        .attr("fill", "red")
+        .call(drag(this.simulation));
         
         this.simulation.nodes(nodes);
         this.simulation.force("link").links(edges);
         this.simulation.restart();
     }
+}
+
+function drag(simulation) {
+    function dragstarted(event, d) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+    }
+    
+    function dragged(event, d) {
+        d.fx = event.x;
+        d.fy = event.y;
+    }
+    
+    function dragended(event, d) {
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+    }
+    
+    return d3.drag()
+    .on("start", dragstarted)
+    .on("drag", dragged)
+    .on("end", dragended);
 }
