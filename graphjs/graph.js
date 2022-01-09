@@ -14,6 +14,7 @@ class Graph {
         this._node = {};
     }
 
+    // TODO: handle node attributes
     add_node(node) {
         if (node in this._node) {
             return;
@@ -112,20 +113,29 @@ class Graph {
 
 // TODO
 // - seperate style from graph
+//      edges: stroke
+//      nodes: r, fill
+//      labels: stroke
 // - add labels to nodes
+// - parameterize all the things
+//      svg
+//      simulation
 class D3Graph extends Graph {
     constructor() {
         super();
 
-        const width = 600;
-        const height = 600;
+        this.width = 600;
+        this.height = 600;
 
+        this.node_radius = 7;
+
+        // TODO: add event handlers to SVG
         this.svg = d3
             .select("body")
             .append("svg")
-            .attr("viewBox", [-width / 2, -height / 2, width, height])
-            .attr("height", height)
-            .attr("width", width);
+            .attr("viewBox", [-this.width / 2, -this.height / 2, this.width, this.height])
+            .attr("height", this.height)
+            .attr("width", this.width);
         
         this.simulation = d3
             .forceSimulation()
@@ -145,6 +155,11 @@ class D3Graph extends Graph {
                     .attr("y1", d => d.source.y)
                     .attr("x2", d => d.target.x)
                     .attr("y2", d => d.target.y);
+
+                this.svg
+                    .selectAll(".labels")
+                    .attr("x", d => d.x - this.node_radius / 3)
+                    .attr("y", d => d.y + this.node_radius / 3);
             });
     }
 
@@ -170,20 +185,30 @@ class D3Graph extends Graph {
         let nodes = this.nodes();
         let edges = this.edges();
 
-        this.svg
-            .selectAll(".nodes")
-            .data(nodes)
-            .join("circle")
-            .attr("class", "nodes")
-            .attr("r", 5);
-
+        // order of updating matters!
         this.svg
             .selectAll(".edges")
             .data(edges)
             .join("line")
             .attr("class", "edges")
-            .attr("stroke", "black");
+            .attr("stroke", "red");
+        
+        this.svg
+            .selectAll(".nodes")
+            .data(nodes)
+            .join("circle")
+            .attr("class", "nodes")
+            .attr("r", this.node_radius)
+            .attr("fill", "grey");
 
+        this.svg
+            .selectAll(".labels")
+            .data(nodes)
+            .join("text")
+            .text(d => d.id)
+            .attr("class", "labels")
+            .attr("font-size", (3 + this.node_radius) + "px");
+        
         this.simulation.nodes(nodes);
         this.simulation.force("link").links(edges);
         this.simulation.restart();
