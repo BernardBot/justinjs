@@ -1,0 +1,113 @@
+<canvas></canvas>
+<br>
+<button>go</button>
+<button>step</button>
+<button>random</button>
+<script>
+  document.body.style.margin = 0;
+
+  canvas = document.querySelector("canvas");
+  ctx = canvas.getContext("2d");
+
+  gobutton = document.getElementsByTagName("button")[0];
+  stepbutton = document.getElementsByTagName("button")[1];
+  randombutton = document.getElementsByTagName("button")[2];
+
+  S = 10;
+  N = 50;
+  
+  canvas.width = canvas.height = S * N;
+
+  A = [];
+  B = [];
+  for (i = -1; i < N + 1; i++) {
+      A[i] = [];
+      B[i] = [];
+      for (j = -1; j < N + 1; j++) {
+	  A[i][j] = false;
+	  B[i][j] = false;
+      }
+  }
+  
+  ctx.fillStyle = "black";
+  ctx.strokeStyle = "grey";
+  function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (i = 0; i < N; i++) {
+	  for (j = 0; j < N; j++) {
+	      if (A[i][j]) {
+		  ctx.fillRect(S * i, S * j, S, S);
+	      } 
+	      ctx.strokeRect(S * i, S * j, S, S);
+	  }
+      }
+  }
+
+  function logic() {
+      for (i = 0; i < N; i++) {
+	  for (j = 0; j < N; j++) {
+	      n = A[i - 1][j - 1] + A[i][j - 1] + A[i + 1][j - 1] +
+		  A[i - 1][j    ] +               A[i + 1][j    ] +
+		  A[i - 1][j + 1] + A[i][j + 1] + A[i + 1][j + 1];
+
+	      if (A[i][j]) {
+		  if (n == 2 || n == 3) {
+		      B[i][j] = true;
+		  } else {
+		      B[i][j] = false;
+		  }
+	      } else {
+		  if (n == 3) {
+		      B[i][j] = true;
+		  } else {
+		      B[i][j] = false;
+		  }
+	      }
+	  }
+      }
+
+      T = A;
+      A = B;
+      B = T;
+  }
+
+  function update() {
+      logic();
+      draw();
+  }
+
+  canvas.addEventListener("mousedown", function(event) {
+      i = Math.floor(event.x / S);
+      j = Math.floor(event.y / S);
+      A[i][j] = !A[i][j];
+      draw();
+  });
+
+  id = null;
+  gobutton.onclick = function() {
+      if (id) {
+	  id = clearInterval(id);
+	  gobutton.innerHTML = "go";
+      } else {
+	  id = setInterval(update, 200);
+	  gobutton.innerHTML = "stop";
+      }
+  };
+
+  stepbutton.onclick = update;
+
+  function random() {
+      for (i = 0; i < N; i++) {
+	  for (j = 0; j < N; j++) {
+	      A[i][j] = Math.random() < 0.3;
+	  }
+      }
+  }
+
+  randombutton.onclick = function() {
+      random();
+      draw();
+  };
+
+  draw();
+</script>

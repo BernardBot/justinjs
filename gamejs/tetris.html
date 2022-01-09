@@ -1,0 +1,140 @@
+<canvas></canvas>
+<div></div>
+<script>
+  w = 10; // width of tetris board
+  h = 20; // height
+  s = 30; // side length of one square block, used for drawing
+
+  // canvas properties
+  c = document.querySelector("canvas");
+  ctx = c.getContext("2d");
+  c.style.border = s + "px solid grey";
+  c.width = s * w;
+  c.height = s * h;
+
+  // text div properties
+  div = document.querySelector("div");
+  div.innerHTML = score = 0; // player score
+  div.style.font = s + "px Arial";
+
+  v = 16; // padding to detect side collision
+  // v must be at least 3 larger than w...?
+  // tetrominoes are defined on a grid with rows of 16 (v) squares
+  I = [[0, 1, 2, 3], [0, 16, 32, 48]];
+  O = [[0, 1, 16, 17]];
+  T = [[1, 16, 17, 18], [0, 16, 17, 32], [0, 1, 2, 17], [1, 16, 17, 33]];
+  J = [[1, 17, 32, 33], [0, 1, 2, 18], [0, 1, 16, 32], [0, 16, 17, 18]];
+  L = [[0, 1, 17, 33], [2, 16, 17, 18], [0, 16, 32, 33], [0, 1, 2, 16]];
+  S = [[1, 2, 16, 17], [0, 16, 17, 33]];
+  Z = [[0, 1, 17, 18], [1, 16, 17, 32]];
+
+  tetrominoes = [I, O, T, J, L, S, Z];
+
+  l = []; // lines built by player
+  p = 3;  // player index: location of current tetromino on 16-grid
+  r = 0;  // tetromino rotation index
+  t = T;  // current tetromino type
+
+  // place current tetromino
+  // update l, p, r, t
+  function place() {
+      for (b of t[r]) {
+	  a = p + b - v;
+	  if (a < 0) {
+	      // GAME OVER -> reset score and lines
+	      l = [];
+	      div.innerHTML = score = 0;
+	      break;
+	  }
+	  l.push(a);
+      }
+      
+      // update lines, most complex part...
+      l.sort();
+      for (i = _i = 0; i < l.length; i++) {
+	  if (l[i] % v == 0) {
+	      for (j = 0; j < w && l[i + j] - l[i] == j; j++) ;
+	      if (j == w) { // found a line
+		  for (k = 0; k < _i; k++) {
+		      l[k] += v; // descend blocks above remove line
+		  }
+		  i += w - 1; // skip line indices
+		  div.innerHTML = ++score;
+		  continue;
+	      }
+	  }
+	  l[_i++] = l[i];
+      }
+      while (_i < l.length) {
+	  l.pop();
+      }
+      p = 3;
+      r = 0;
+      t = tetrominoes[Math.floor(Math.random() * tetrominoes.length)];
+  }
+
+  // check if current tetromino collides with lines, bottom, or sides
+  // also used for validating player input
+  function collision() {
+      for (b of t[r]) {
+	  if (p + b >= v * h || (p + b) % v >= w) { 
+	      return true;
+	  }
+	  for (a of l) {
+	      if (p + b == a) {
+		  return true;
+	      }
+	  }
+      }
+      return false;
+  }
+
+  // draw backgound, current tetromino, and lines
+  function draw() {
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, c.width, c.height);
+
+      px = p % v;
+      py = (p - px) / v;
+
+      ctx.fillStyle = "yellow";
+      for (b of t[r]) {
+	  bx = b % v;
+	  by = (b - bx) / v;
+	  ctx.fillRect(s * (px + bx), s * (py + by), s - 1, s - 1);
+      }
+
+      ctx.fillStyle = "cyan";
+      for (a of l) {
+	  ax = a % v;
+	  ay = (a - ax) / v;
+	  ctx.fillRect(s * ax, s * ay, s - 1, s - 1);
+      }
+  }
+
+  // update the game loop and make tetromino fall
+  setInterval(() => {
+      if (collision()) {
+	  place();
+      }
+      draw();
+  });
+  setInterval(() => p += v, 150);
+
+  // player input with validation
+  document.addEventListener("keydown", (key) => {
+      _r = r;
+      _p = p;
+
+      if (key.key == "ArrowUp") r = (r + 1) % t.length;
+      if (key.key == "ArrowLeft") p--;
+      if (key.key == "ArrowRight") p++;
+      if (key.key == "ArrowDown") p += v;
+
+      if (collision()) {
+	  r = _r;
+	  p = _p;
+      }
+  });
+</script>
+

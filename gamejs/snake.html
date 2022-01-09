@@ -1,0 +1,80 @@
+<canvas></canvas>
+<script>
+  canvas = document.querySelector("canvas");
+  ctx = canvas.getContext("2d");
+
+  S = 30;
+  N = 15;
+
+  canvas.width = canvas.height = S * N;
+
+  EMPTY = 0, SNAKE = 1, APPLE = 2;
+
+  G = [];
+  for (i = 0; i < N; i++) {
+      G[i] = [];
+      for (j = 0; j < N; j++) {
+	  G[i][j] = EMPTY;
+      }
+  }
+  G[6][3] = APPLE;
+
+  x = 3, y = 3;
+  dx = 1, dy = 0;
+
+  T = [];
+  l = 5;
+
+  colormap = [];
+  colormap[EMPTY] = "grey";
+  colormap[SNAKE] = "green";
+  colormap[APPLE] = "red";
+
+  function draw() {
+      for (i = 0; i < N; i++) {
+	  for (j = 0; j < N; j++) {
+	      ctx.fillStyle = colormap[G[i][j]];
+	      ctx.fillRect(S * i, S * j, S, S);
+	  }
+      }
+  }
+
+  function logic() {
+      x = (x + dx + N) % N;
+      y = (y + dy + N) % N;
+
+      if (G[x][y] == SNAKE) {
+	  l = 5;
+      } else if (G[x][y] == APPLE) {
+	  l++;
+	  do {
+	      ax = Math.floor(N * Math.random());
+	      ay = Math.floor(N * Math.random());
+	  } while (G[ax][ay]);
+	  G[ax][ay] = APPLE;
+      }
+
+      T.push([x, y]);
+      while (T.length > l) {
+	  t = T.shift();
+	  G[t[0]][t[1]] = EMPTY;
+      }
+      
+      G[x][y] = SNAKE;
+  }
+
+  function update() {
+      logic();
+      draw();
+  }
+
+  setInterval(update, 100);
+
+  document.addEventListener("keydown", function(key) {
+      if (key.key == "w") dx =  0, dy = -1;
+      if (key.key == "s") dx =  0, dy =  1;
+      if (key.key == "a") dx = -1, dy =  0;
+      if (key.key == "d") dx =  1, dy =  0;
+  });
+</script>
+
