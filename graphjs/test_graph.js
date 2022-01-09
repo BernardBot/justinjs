@@ -1,33 +1,15 @@
-obj = {
-    "kaas" : {
-        "ham" : {},
-    },
-    "math" : {
-        "graph theory" : {
-            "kaas" : {},
-            "jam" : {},
-        }
-    }
-}
+// c = 1;
+// n = 10;
+// p = c * Math.log(n) / n;
+// G = D3Graph.random_graph(n, p);
+// G.plot()
 
-ex1 = {
-    "glossary": {
-        "title": "example glossary",
-		"GlossDiv": {
-            "title": "S",
-			"GlossList": {
-                "GlossEntry": {
-                    "ID": "SGML",
-					"SortAs": "SGML",
-					"GlossTerm": "Standard Generalized Markup Language",
-					"Acronym": "SGML",
-					"Abbrev": "ISO 8879:1986",
-                }
-            }
-        }
-    }
-}
-
-G = D3Graph.from_object(ex1);
-
-G.plot()
+let G = D3Graph.from_edges([
+    [0, 1],
+    [0, 2],
+    [1, 2],
+    [2, 0],
+    [2, 3],
+    [3, 3]
+]);
+G.plot();

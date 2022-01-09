@@ -1,3 +1,4 @@
+// https://github.com/mrpandey/d3graphTheory/tree/master/ch/degree-of-vertex
 "use strict";
 //node ids are in order in which nodes come in existence
 var nodes = [
