@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        canvas = document.createElement("canvas");
+        canvas.height = 800;
+        canvas.style.border = "1px solid black";
+        document.body.appendChild(canvas);
+        ctx = canvas.getContext("2d");
+        
+        dams = []
+        no_dams = 10;
+        for(i = 0; i < no_dams; i++){
+            dams.push({ height : 200, open : true, })
+        }
+        dams[0].height = 300;
+
+        t = 0;
+        dt = 0.01;
+        sx = 10;
+        dx = 3 * sx;
+
+        canvas.width = no_dams * dx;
+
+        
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (var i = 0; i < dams.length; i++) {
+                dam = dams[i];
+                x = i * dx;
+                y = canvas.height - dam.height;
+                
+                ctx.fillStyle = dam.open ? "green" : "red";
+                ctx.fillRect(x, y, sx, dam.height);
+            }
+        }
+
+        function update() {
+            for (var i = 0; i < dams.length - 1; i++) {
+                curr = dams[i];
+                next = dams[i + 1];
+                if (curr.open) {
+                    next.height += curr.height * dt;
+                    curr.height -= curr.height * dt;
+                }
+            }
+            
+            first = dams[0];
+            first.height = 300;
+
+            last = dams[dams.length - 1];
+            if (last.open) {
+                last.height -= last.height * dt;
+            }
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        canvas.addEventListener("click", function(event) {
+            var x = event.x;
+            var i = Math.min(Math.floor(x / dx), dams.length - 1);
+            var dam = dams[i];
+            dam.open = !dam.open;
+        });
+
+        loop();
+    </script>
+</body>
+</html>
