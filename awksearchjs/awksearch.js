@@ -1,7 +1,7 @@
 function build_handler(data, render) {
     return function (event) {
         const regex = new RegExp(this.value, "gi");
-        return render(data.filter(item => item.toString().match(regex)));
+        return render(data.filter(item => JSON.stringify(item).match(regex)));
     }
 }
 
