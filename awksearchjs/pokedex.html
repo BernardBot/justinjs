@@ -50,6 +50,32 @@
 			<div>
 				<h1>${item.id}: ${item.name.english}</h1>
 				<p>${item.type.join(", ")}</p>
+				<table>
+					<tr>
+						<td>HP</td>
+						<td>${item.base.HP}</td>
+					</tr>
+					<tr>
+						<td>Attack</td>
+						<td>${item.base.Attack}</td>
+					</tr>
+					<tr>
+						<td>Defense</td>
+						<td>${item.base.Defense}</td>
+					</tr>
+					<tr>
+						<td>Sp. Attack</td>
+						<td>${item.base["Sp. Attack"]}</td>
+					</tr>
+					<tr>
+						<td>Sp. Defense</td>
+						<td>${item.base["Sp. Defense"]}</td>
+					</tr>
+					<tr>
+						<td>Speed</td>
+						<td>${item.base.Speed}</td>
+					</tr>
+				</table>
 			</div>
 			`;
 		}
