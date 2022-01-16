@@ -4,7 +4,12 @@
 		#awk_input {
 			font-size: 1.5em;
 		}
-		#awk_data_output{
+		
+		#awk_metadata_output {
+			font-size: large;
+		}
+		
+		#awk_data_output {
 			display: grid;
 			grid-template-columns: repeat(5, 1fr);
 			gap: 5px;
@@ -12,21 +17,38 @@
 	</style>
 </head>
 <body>
-	<script src="awksearch.js"></script>
+	<input id="awk_input"/>
+	<div id="awk_metadata_output"></div>
+	<div id="awk_data_output"></div>
 	<script>
-		window.onload = () => awk_setup(data, data_template, metadata_template);
+		const awk_input = document.getElementById('awk_input');
+		const awk_metadata_output = document.getElementById('awk_metadata_output');
+		const awk_data_output = document.getElementById('awk_data_output');
 		
-		function data_template(props) {
+		awk_input.oninput = function (event) {
+			const regex = new RegExp(this.value, "gi");
+			filtered_data = data.filter(item => JSON.stringify(item).match(regex));
+			awk_metadata_output.innerHTML = metadata_template(filtered_data);
+			awk_data_output.innerHTML = filtered_data.map(data_template).join("");
+		}
+		
+		window.onload = function() {
+			awk_input.focus();
+			awk_metadata_output.innerHTML = metadata_template(data);
+			awk_data_output.innerHTML = data.map(data_template).join("");
+		};
+		
+		function data_template(item) {
 			return `
 			<div>
-				<h2>${props.parameter}: ${props.name}</h2>
-                <h3>type: ${props.vartype}</h3>
-				<p>process: ${props.process}</p>
-                <p>fbnr: ${props.fbnr}</p>
-                <p>range: ${props.min} to ${props.max}</p>
-				<p>default: ${props.default}</p>
-				<p>length ${props.varlength}</p>
-				<p>${props.description}</p>
+				<h2>${item.parameter}: ${item.name}</h2>
+                <h3>type: ${item.vartype}</h3>
+				<p>process: ${item.process}</p>
+                <p>fbnr: ${item.fbnr}</p>
+                <p>range: ${item.min} to ${item.max}</p>
+				<p>default: ${item.default}</p>
+				<p>length ${item.varlength}</p>
+				<p>${item.description}</p>
 			</div>
 			`;
 		}

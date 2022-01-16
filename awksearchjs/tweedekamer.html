@@ -1,10 +1,15 @@
 <!DOCTYPE html>
 <head>
 	<style>
-		.user-input {
+		#awk_input {
 			font-size: 1.5em;
 		}
-		.container {
+		
+		#awk_metadata_output {
+			font-size: large;
+		}
+		
+		#awk_data_output {
 			display: grid;
 			grid-template-columns: repeat(5, 1fr);
 			gap: 5px;
@@ -12,11 +17,35 @@
 	</style>
 </head>
 <body>
-	<script src="awksearch.js"></script>
+	<input id="awk_input"/>
+	<div id="awk_metadata_output"></div>
+	<div id="awk_data_output"></div>
 	<script>
-		window.onload = () => _onload(data, template);
+		const awk_input = document.getElementById('awk_input');
+		const awk_metadata_output = document.getElementById('awk_metadata_output');
+		const awk_data_output = document.getElementById('awk_data_output');
 		
-		function template([naam, partij, woonplaats, geboortejaar, startjaar]) {
+		awk_input.oninput = function (event) {
+			const regex = new RegExp(this.value, "gi");
+			filtered_data = data.filter(item => JSON.stringify(item).match(regex));
+			awk_metadata_output.innerHTML = metadata_template(filtered_data);
+			awk_data_output.innerHTML = filtered_data.map(data_template).join("");
+		}
+		
+		window.onload = function() {
+			awk_input.focus();
+			awk_metadata_output.innerHTML = metadata_template(data);
+			awk_data_output.innerHTML = data.map(data_template).join("");
+		};
+		
+		function metadata_template(filtered_data) {
+			return `
+			<div>
+				<p>${filtered_data.length} items</p>
+			</div>
+			`;
+		}
+		function data_template([naam, partij, woonplaats, geboortejaar, startjaar]) {
 			return `
 			<div>
 				<h2>${naam}</h2>
