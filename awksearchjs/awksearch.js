@@ -1,31 +1,24 @@
-function build_handler(data, render) {
-    return function (event) {
+function awk_setup(data, data_template, metadata_template) {
+    const awk_input = document.createElement("input");
+    const awk_metadata_output = document.createElement("div");
+    const awk_data_output = document.createElement("div");
+
+    awk_input.id = "awk_input";
+    awk_metadata_output.id = "awk_metadata_output";
+    awk_data_output.id = "awk_data_output";
+
+    awk_input.oninput = function (event) {
         const regex = new RegExp(this.value, "gi");
-        return render(data.filter(item => JSON.stringify(item).match(regex)));
+        filtered_data = data.filter(item => JSON.stringify(item).match(regex));
+        awk_metadata_output.innerHTML = metadata_template(filtered_data);
+        awk_data_output.innerHTML = filtered_data.map(data_template).join("");
     }
-}
 
-function build_render(container, template) {
-    return function (data) {
-        container.innerHTML = data.map(template).join("");
-    }
-}
+    document.body.appendChild(awk_input);
+    document.body.appendChild(awk_metadata_output);
+    document.body.appendChild(awk_data_output);
 
-function _onload(data, template) {
-    const user_input = document.createElement("input");
-    const container = document.createElement("div");
-
-    user_input.className = "user-input";
-    container.className = "container";
-
-    const render = build_render(container, template);
-    const handler = build_handler(data, render);
-
-    user_input.addEventListener("input", handler);
-
-    document.body.appendChild(user_input);
-    document.body.appendChild(container);
-
-    user_input.focus();
-    render(data);
+    awk_input.focus();
+    awk_metadata_output.innerHTML = metadata_template(data);
+    awk_data_output.innerHTML = data.map(data_template).join("");
 }
