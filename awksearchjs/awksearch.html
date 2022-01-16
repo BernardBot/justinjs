@@ -5,6 +5,10 @@
 			font-size: 1.5em;
 		}
 		
+		#awk_metadata_output {
+			font-size: large;
+		}
+		
 		#awk_data_output {
 			display: grid;
 			grid-template-columns: repeat(5, 1fr);
@@ -30,19 +34,14 @@
 		
 		window.onload = function() {
 			awk_input.focus();
-			fetch('https://raw.githubusercontent.com/fanzeyi/pokemon.json/master/pokedex.json')
-			.then(response => response.json())
-			.then(data => {
-				window.data = data;
-				awk_metadata_output.innerHTML = metadata_template(data);
-				awk_data_output.innerHTML = data.map(data_template).join("");
-			});
+			awk_metadata_output.innerHTML = metadata_template(data);
+			awk_data_output.innerHTML = data.map(data_template).join("");
 		};
 		
 		function data_template(item) {
 			return `
 			<div>
-				<p>${item.name.english}</p>
+				<p>${item}</p>
 			</div>
 			`;
 		}
@@ -55,6 +54,7 @@
 			`;
 		}
 
+		const data = [...Array(30).keys()];
 	</script>
 </body>
 </html>
