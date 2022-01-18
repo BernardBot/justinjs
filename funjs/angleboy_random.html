@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        document.body.appendChild(document.createElement("canvas"));
+
+        canvas = document.getElementsByTagName("canvas")[0];
+        ctx = canvas.getContext("2d");
+        canvas.height = 500;
+        canvas.width = 500;
+        canvas.style.border = "1px solid black";
+
+        a = 0;
+        da = Math.PI / 2;
+        x = canvas.width / 2;
+        y = canvas.height / 2;
+        p = 0.1;
+
+        function loop() {
+            ctx.fillRect(x, y, 1, 1);
+            x += Math.cos(a);
+            y += Math.sin(a);
+            a += da * (Math.random() < p);
+            requestAnimationFrame(loop);
+        }
+
+        document.addEventListener("keydown", function(e) {
+            if (e.keyCode == 37) {
+                a -= da;
+            } else if (e.keyCode == 39) {
+                a += da;
+            }
+        });
+
+        loop();
+</script>
+</body>
+</html>

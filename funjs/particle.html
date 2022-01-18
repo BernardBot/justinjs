@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        document.body.appendChild(document.createElement("canvas"));
+
+        canvas = document.getElementsByTagName("canvas")[0];
+        ctx = canvas.getContext("2d");
+        canvas.height = 500;
+        canvas.width = 500;
+        canvas.style.border = "1px solid black";
+
+        p = 0.01;
+        particles = [];
+        for (x = 0; x < canvas.width; x++) {
+            for (y = 0; y < canvas.height; y++) {
+                if (Math.random() < p) {
+                    particles.push([x, y]);
+                }
+            }
+        }
+        
+        s = 5;
+        function loop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (i = 0; i < particles.length; i++) {
+                [x, y] = particles[i];
+                ctx.fillRect(x, y, s, s);
+                particles[i][0] += Math.random() - 0.5;
+                particles[i][1] += Math.random() - 0.5;
+            }
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+</script>
+</body>
+</html>
