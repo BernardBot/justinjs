@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        document.body.appendChild(document.createElement("canvas"));
+
+        canvas = document.getElementsByTagName("canvas")[0];
+        ctx = canvas.getContext("2d");
+        canvas.height = 500;
+        canvas.width = 500;
+        canvas.style.border = "1px solid black";
+
+        nodes = [];
+        n = 13;
+        for (i = 0; i < n; i++) {
+            nodes.push([
+                Math.random() * canvas.width, 
+                Math.random() * canvas.height,
+            ]);
+        }
+
+        s = 10;
+        ctx.beginPath();
+        for ([x, y] of nodes) {
+            ctx.fillRect(x, y, s, s);
+            ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+    </script>
+</body>
+</html>
