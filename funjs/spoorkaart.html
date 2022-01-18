@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        document.body.appendChild(document.createElement("canvas"));
+
+        canvas = document.getElementsByTagName("canvas")[0];
+        ctx = canvas.getContext("2d");
+        s = 1;
+        canvas.width = 600 * s;
+        canvas.height = 700 * s;
+        canvas.style.border = "1px solid black";
+
+        var img = new Image();
+        img.src = "spoorkaart.jpg";
+
+        img.onload = function() {
+            img.width = canvas.width;
+            img.height = canvas.height;
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        }
+
+        document.addEventListener("click", function(e) {
+            var x = e.x - canvas.offsetLeft;
+            var y = e.y - canvas.offsetTop;
+            var size = 10;
+            ctx.strokeRect(x, y, size, size);
+            console.log(x, y);
+        });
+    </script>
+</body>
+</html>
