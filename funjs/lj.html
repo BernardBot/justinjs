@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        // https://en.wikipedia.org/wiki/Lennard-Jones_potential
+        document.body.appendChild(document.createElement("canvas"));
+
+        canvas = document.getElementsByTagName("canvas")[0];
+        ctx = canvas.getContext("2d");
+        canvas.height = 500;
+        canvas.width = 500;
+        canvas.style.border = "1px solid black";
+
+        particles = [];
+        document.addEventListener("click", function(e) {
+            particles.push([e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop, 0, 0]);
+        });
+
+        draw_size = 5;
+        e = 0.01;
+        s = 10;
+        A = 4 * e * s ** 12;
+        B = 4 * e * s ** 6;
+        function loop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (i = 0; i < particles.length; i++) {
+                x1 = particles[i][0];
+                y1 = particles[i][1];
+                vx = particles[i][2];
+                vy = particles[i][3];
+
+                ctx.fillRect(x1, y1, draw_size, draw_size);
+
+                for (j = 0; j < particles.length; j++) {
+                    x2 = particles[j][0];
+                    y2 = particles[j][1];
+
+                    if (i != j) {
+                        dx = x2 - x1;
+                        dy = y2 - y1;
+
+                        r = Math.hypot(dx, dy);
+                        r2 = r * r;
+                        r6 = r2 * r2 * r2;
+                        r12 = r6 * r6;
+                        v = A / r12 - B / r6;
+
+                        particles[i][0] += vx;
+                        particles[i][1] += vy;
+                        particles[i][2] += v * dx;
+                        particles[i][3] += v * dy;
+                    }
+                }
+
+                particles[i][0] = (particles[i][0] + canvas.width) % canvas.width;
+                particles[i][1] = (particles[i][1] + canvas.height) % canvas.height;
+            }
+
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+</script>
+</body>
+</html>
