@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        document.body.appendChild(document.createElement("canvas"));
+        document.body.appendChild(document.createElement("div"));
+
+        canvas = document.getElementsByTagName("canvas")[0];
+        div = document.getElementsByTagName("div")[0];
+        ctx = canvas.getContext("2d");
+        canvas.width = 250;
+        canvas.height = 500;
+        canvas.style.border = "1px solid black";
+
+        h = canvas.height / 2;
+        ys = [100, 200, 300, 140, 350];
+        i = 0;
+        dx = 100;
+        score = 0;
+
+        s = 10;
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillRect(0, canvas.height - h, s, s);
+
+            for (j = 0; j < ys.length; j++) {
+                x = canvas.width - i + j * dx
+                y = canvas.height - ys[j]
+                ctx.fillRect(x, y, s, ys[j]);
+                ctx.fillRect(x, 0, s, y - 10 * s);
+            }
+
+            div.innerHTML = "Score: " + score;
+        }
+
+        function logic() {
+            h -= 2;
+            i++;
+
+            if (i == canvas.width) {
+                score++;
+
+                if (h < ys[0] || h > ys[0] + 10 * s) {
+                    score = 0;
+                }
+
+                ys.shift();
+                ys.push(10 * s + Math.random() * (canvas.height - 20 * s));
+                i -= dx;
+            }
+        }
+
+        document.addEventListener("keydown", function(e) {
+            h += 50;
+        });
+        
+
+        function loop() {
+            draw();
+            logic();
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+    </script>
+</body>
+</html>

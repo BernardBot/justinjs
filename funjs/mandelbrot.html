@@ -47,7 +47,6 @@
         canvas.addEventListener("click", function(e) {
             var x = e.pageX - canvas.offsetLeft;
             var y = e.pageY - canvas.offsetTop;
-            console.log(e);
             offset_x = offset_x - (x / canvas.width * scale) + scale / zoom / 2;
             offset_y = offset_y - (y / canvas.height * scale) + scale / zoom / 2;
             scale = scale / zoom;

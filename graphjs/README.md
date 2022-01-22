@@ -6,19 +6,6 @@ that are visible and the model we created in code. D3.js deals
 with this through `data` and `join` functions.
 
 # Usage Examples
-Plot a simple graph with 4 nodes and 4 edges:
-```js
-let G = D3Graph.from_edges([
-    [0, 1],
-    [0, 2],
-    [1, 2],
-    [2, 0],
-    [2, 3],
-    [3, 3]
-]);
-G.plot();
-```
-
 Erdos renyi graph, see https://en.wikipedia.org/wiki/Erd%C5%91s%E2%80%93R%C3%A9nyi_model#Properties_of_G(n,_p):
 ```js
 c = 1;
@@ -27,6 +14,13 @@ p = c * Math.log(n) / n;
 G = D3Graph.random_graph(n, p);
 G.plot()
 ```
+
+# Projects
+- Graph Diagram Editor
+  - State Machine Editor
+- Graph Theory
+- JSON Object Viewer
+- Ski Resort Map
 
 # References
 - https://d3gt.com/index.html

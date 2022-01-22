@@ -32,12 +32,6 @@ class Graph {
         delete this._node[node];
     }
 
-    add_nodes(nodes) {
-        for (let node of nodes) {
-            this.add_node(...node);
-        }
-    }
-
     add_edge(u, v, attrs={}) {
         if (!(u in this._node)) {
             this.add_node(u);
@@ -59,12 +53,6 @@ class Graph {
         }
     }
 
-    add_edges(edges) {
-        for (let edge of edges) {
-            this.add_edge(...edge);
-        }
-    }
-
     nodes() {
         let nodes = [];
         for (let u in this._node) {
@@ -82,7 +70,6 @@ class Graph {
         }
         return edges;
     }
-
 
     static complete_graph(n) {
         let G = new this();
