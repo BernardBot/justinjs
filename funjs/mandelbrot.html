@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        document.body.appendChild(document.createElement("canvas"));
+
+        canvas = document.getElementsByTagName("canvas")[0];
+        ctx = canvas.getContext("2d");
+        canvas.width = 300;
+        canvas.height = 300;
+        canvas.style.border = "1px solid black";
+
+        function draw() {
+            for (x = 0; x < canvas.width; x++) {
+                for (y = 0; y < canvas.height; y++) {
+                    ctx.fillStyle = mandelbrot(x, y);
+                    ctx.fillRect(x, y, 1, 1);
+                }
+            }
+        }
+        
+        scale = 4;
+        offset_x = 2.5;
+        offset_y = 2;
+        function mandelbrot(a, b) {
+            var ca = a / canvas.width * scale - offset_x;
+            var cb = b / canvas.height * scale - offset_y;
+            var zx = 0;
+            var zy = 0;
+            var i = 255;
+            while (i && zx * zx + zy * zy < 4) {
+                var tmp = zx * zx - zy * zy + ca;
+                zy = 2 * zx * zy + cb;
+                zx = tmp;
+                i--;
+            }
+            return "rgb(" + i + ", " + i + ", " + i + ")";
+        }
+
+        zoom = 1.25;
+        canvas.addEventListener("click", function(e) {
+            var x = e.pageX - canvas.offsetLeft;
+            var y = e.pageY - canvas.offsetTop;
+            console.log(e);
+            offset_x = offset_x - (x / canvas.width * scale) + scale / zoom / 2;
+            offset_y = offset_y - (y / canvas.height * scale) + scale / zoom / 2;
+            scale = scale / zoom;
+            draw();
+        });
+
+        draw();
+    </script>
+</body>
+</html>
