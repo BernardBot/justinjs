@@ -4,11 +4,11 @@ main -> element
 
 value -> object
        | array
-	   | string
-	   | number
-	   | "true"
-	   | "false"
-	   | "null"
+       | string
+       | number
+       | "true"
+       | "false"
+       | "null"
 	   
 object -> "{" ws "}"
         | "{" members "}"
