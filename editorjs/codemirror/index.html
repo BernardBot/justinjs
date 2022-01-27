@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/codemirror.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/codemirror.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/mode/python/python.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.19.0/full/pyodide.js"></script>
+    <style>
+        .CodeMirror {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <textarea id="mytextarea"></textarea>
+    </div>
+    <div>
+        <p>
+            <button id="run">Run</button>
+        </p>
+    </div>
+    <div>
+        <pre id="output"></pre>
+    </div>
+    <script>
+        run = document.getElementById("run");
+        mytextarea = document.getElementById("mytextarea");
+        output = document.getElementById("output");
+
+        editor = CodeMirror.fromTextArea(mytextarea, {
+            lineNumbers: true,
+            tabSize: 2,
+            lineWrapping: true,
+        });
+
+        editor.setSize(500, 300);
+
+        (async function main() {
+            pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.19.0/full/" });
+        })();
+
+        run.onclick = function() {
+            output.innerHTML = pyodide.runPython(editor.getValue());
+        };
+    </script>
+</body>
+
+</html>
