@@ -9,6 +9,7 @@
     <div><pre id="result"></pre></div>
     <script src="nearley.js"></script>
     <script src="sexp.js"></script>
+    <script src="eval.js"></script>
     <script>
         // https://github.com/kach/nearley/issues/156
         function parser(text) {
@@ -20,8 +21,18 @@
         const text = document.getElementById("text");
         const result = document.getElementById("result");
         text.oninput = function() {
-            const parsed = parser(text.value);
-            result.innerHTML = JSON.stringify(parsed, null, 2);
+            try {
+                const parsed = parser(text.value);
+                if (parsed[0]) {
+                    const value = eval_sexps(parsed[0]);
+                    result.innerHTML = JSON.stringify(value);
+                } else {
+                    throw new Error("No parse");
+                }
+            } catch(e) {
+                console.log(e);
+                result.innerHTML = e;
+            }
         }
     </script>
 </body>

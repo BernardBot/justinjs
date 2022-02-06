@@ -10,7 +10,7 @@ var grammar = {
     {"name": "sexps", "symbols": ["sexp", "__", "sexps"], "postprocess": d => { d[2].unshift(d[0]); return d[2]; }},
     {"name": "sexp", "symbols": ["list"], "postprocess": d => d[0]},
     {"name": "sexp", "symbols": ["atom"], "postprocess": d => d[0]},
-    {"name": "list", "symbols": [{"literal":"("}, "_", {"literal":")"}], "postprocess": d => []},
+    {"name": "list", "symbols": [{"literal":"("}, "_", {"literal":")"}], "postprocess": d => null},
     {"name": "list", "symbols": [{"literal":"("}, "_", "sexps", "_", {"literal":")"}], "postprocess": d => d[2]},
     {"name": "atom$ebnf$1", "symbols": [/[a-z]/]},
     {"name": "atom$ebnf$1", "symbols": ["atom$ebnf$1", /[a-z]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},

@@ -6,7 +6,7 @@ sexps -> sexp              {% d => d %}
 sexp  -> list              {% d => d[0] %}
        | atom              {% d => d[0] %}
 	   
-list  -> "(" _ ")"         {% d => [] %}
+list  -> "(" _ ")"         {% d => null %}
        | "(" _ sexps _ ")" {% d => d[2] %}
 	   
 atom  -> [a-z]:+           {% d => d[0].join("") %}
