@@ -1,5 +1,5 @@
 class Turtle {
-    constructor () {
+    constructor() {
         this.canvas = document.createElement("canvas");;
 
         this.width = this.canvas.width = 600;
@@ -15,7 +15,7 @@ class Turtle {
         this.isdown = true;
     }
 
-    draw_line (x0, y0, x1, y1) {
+    draw_line(x0, y0, x1, y1) {
         if (this.isdown) {
             this.ctx.beginPath();
             this.ctx.moveTo(this.width / 2 + x0, this.height / 2 - y0);
@@ -24,14 +24,14 @@ class Turtle {
         }
     }
 
-    draw_arc (x, y, r, start, end, counterclockwise) {
+    draw_arc(x, y, r, start, end, counterclockwise) {
         if (this.isdown) {
             this.ctx.beginPath();
             this.ctx.arc(this.width / 2 + x, this.height / 2 - y, r, start, end, counterclockwise);
             this.ctx.stroke();
         }
     }
-    
+
     reset() {
         this.ctx.clearRect(0, 0, this.width, this.height);
         this.position = [0, 0];
@@ -39,7 +39,7 @@ class Turtle {
         this.isdown = true;
     }
 
-    goto (x, y) {
+    goto(x, y) {
         this.draw_line(this.position[0], this.position[1], x, y);
         this.position = [x, y];
     }
@@ -52,21 +52,21 @@ class Turtle {
         this.isdown = true;
     }
 
-    setheading (angle) {
+    setheading(angle) {
         this.angle = angle;
     }
 
-    forward (distance) {
+    forward(distance) {
         let x = this.position[0] + distance * Math.cos(this.angle * Math.PI / 180);
         let y = this.position[1] + distance * Math.sin(this.angle * Math.PI / 180);
         this.goto(x, y);
     }
 
-    right (angle) {
+    right(angle) {
         this.angle -= angle;
     }
 
-    left (angle) {
+    left(angle) {
         this.angle += angle;
     }
 
@@ -78,7 +78,7 @@ class Turtle {
         return this.position;
     }
 
-    circle(radius, extent=360) {
+    circle(radius, extent = 360) {
         let x = this.position[0] - radius * Math.cos((this.angle - 90) * Math.PI / 180);
         let y = this.position[1] - radius * Math.sin((this.angle - 90) * Math.PI / 180);
         let start = Math.PI / 2 - this.angle * Math.PI / 180;
@@ -104,4 +104,4 @@ function right(angle) { turtle.right(angle); }
 function left(angle) { turtle.left(angle); }
 function heading() { return turtle.heading(); }
 function pos() { return turtle.pos(); }
-function circle(radius, extent=360) { turtle.circle(radius, extent); }
+function circle(radius, extent = 360) { turtle.circle(radius, extent); }
