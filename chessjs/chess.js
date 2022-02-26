@@ -80,8 +80,8 @@ function print_move(m) {
 }
 
 stk = [];
-function push() { stk.push(print_fen()); }
-function pop() { parse_fen(stk.pop()); }
+function push() { stk.push([brd, clr, ctl, esq, hlf, fll]); }
+function pop() { [brd, clr, ctl, esq, hlf, fll] = stk.pop(); }
 
 function do_move(m) {
     push();
