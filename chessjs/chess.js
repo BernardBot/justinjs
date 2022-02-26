@@ -85,16 +85,69 @@ function pop() { parse_fen(stk.pop()); }
 
 function do_move(m) {
     push();
-    let [fr, to] = m;
-    let piece = brd[fr];
-    brd = brd.slice(0, fr) + empty + brd.slice(fr + 1);
-    brd = brd.slice(0, to) + piece + brd.slice(to + 1);
+    let [i, j] = m;
+    let p = brd[i];
+    
+    brd = brd.slice(0, i) + empty + brd.slice(i + 1);
+    brd = brd.slice(0, j) + p + brd.slice(j + 1);
+
     // TODO: update other pos params
+    esq = 0;
     if (clr == "w") {
         clr = "b";
+        if (p == "P" && j - i == N + N) {
+            esq = i + N;
+        }
+
+        if (ctl != "-") {
+            if (p == "K") {
+                ctl = ctl.replace("K", "").replace("Q", "");
+            } else if (p == "R") {
+                if (i == A1) {
+                    ctl = ctl.replace("Q", "");
+                } else if (i == H1) {
+                    ctl = ctl.replace("K", "");
+                }
+            }
+        }
+
+        if (p == "K") {
+            if (j - i == W + W) {
+                brd = brd.slice(0, A1) + empty + brd.slice(A1 + 1);
+                brd = brd.slice(0, A1 + 3) + "R" + brd.slice(A1 + 4);
+            } else if (j - i == E + E) {
+                brd = brd.slice(0, H1) + empty + brd.slice(H1 + 1);
+                brd = brd.slice(0, A1 + 5) + "R" + brd.slice(A1 + 6);
+            }
+        }
     } else {
         clr = "w";
+        if (p == "p" && j - i == S + S) {
+            esq = i + S;
+        }
+
+        if (ctl != "-") {
+            if (p == "k") {
+                ctl = ctl.replace("k", "").replace("q", "");
+            } else if (p == "r") {
+                if (i == A8) {
+                    ctl = ctl.replace("q", "");
+                } else if (i == H8) {
+                    ctl = ctl.replace("k", "");
+                }
+            }
+        }
+        if (p == "k") {
+            if (j - i == W + W) {
+                brd = brd.slice(0, A8) + empty + brd.slice(A8 + 1);
+                brd = brd.slice(0, A8 + 3) + "r" + brd.slice(A8 + 4);
+            } else if (j - i == E + E) {
+                brd = brd.slice(0, H8) + empty + brd.slice(H8 + 1);
+                brd = brd.slice(0, A8 + 5) + "r" + brd.slice(A8 + 6);
+            }
+        }
     }
+    ctl = ctl || "-";
 }
 function undo_move() {
     pop();
@@ -190,18 +243,21 @@ function is_attacked(i, them) {
     return false;
 }
 
+function in_check() {
+    // Note: used after do_move so check for other color king
+    if (clr == "w") {
+        return is_attacked(brd.indexOf("k"), wpieces);
+    } else {
+        return is_attacked(brd.indexOf("K"), bpieces);
+    }
+}
+
 // TODO: legal moves
 function gen_legal_moves() {
     let moves = [];
-    let i, them;
-    if (clr == "w") {
-        i = brd.indexOf("K"), them = bpieces;
-    } else {
-        i = brd.indexOf("k"), them = wpieces;
-    }
     for (let move of gen_moves()) {
         do_move(move);
-        if (!is_attacked(i, them)) {
+        if (!in_check()) {
             moves.push(move);
         }
         undo_move();
