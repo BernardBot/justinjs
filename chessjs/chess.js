@@ -277,9 +277,11 @@ function perft(depth) {
     return n;
 }
 
-function timeit(fun) {
+function timeit(fun, n = 1) {
     let t = Date.now();
-    fun();
+    for (let i = 0; i < n; i++) {
+        fun();
+    }
     return Date.now() - t;
 }
 
