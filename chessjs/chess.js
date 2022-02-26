@@ -10,6 +10,15 @@ dir = {
     "b" :         [N+E,N+W,S+E,S+W],
     "n" : [N+E+E,N+N+E,N+W+W,N+N+W,
            S+E+E,S+S+E,S+W+W,S+S+W],
+    "p" : [S+E,S+W],
+
+    "K" : [N,S,E,W,N+E,N+W,S+E,S+W],
+    "Q" : [N,S,E,W,N+E,N+W,S+E,S+W],
+    "R" : [N,S,E,W],
+    "B" :         [N+E,N+W,S+E,S+W],
+    "N" : [N+E+E,N+N+E,N+W+W,N+N+W,
+           S+E+E,S+S+E,S+W+W,S+S+W],
+    "P" : [N+E,N+W],
 };
 files = "abcdefgh";
 ranks = "12345678";
@@ -30,6 +39,7 @@ function parse_fen(fen) {
         .replaceAll("2", "..")
         .replaceAll("1", ".") +
         "\n         \n         \n";
+    esq = parse_esq(esq);
     hlf = parseInt(hlf);
     fll = parseInt(fll);
 }
@@ -44,7 +54,7 @@ function print_fen() {
         .replaceAll("...", "3")
         .replaceAll("..", "2")
         .replaceAll(".", "1");
-    return [plc, clr, ctl, esq, hlf, fll].join(" ");
+    return [plc, clr, ctl, print_esq(esq), hlf, fll].join(" ");
 }
 function parse_file(file) { return files.indexOf(file); }
 function print_file(i) { return files[i]; }
@@ -55,6 +65,8 @@ function parse_sq(sq) {
     let r = parse_rank(sq[1]);
     return A1 + f + N * r;
 }
+function parse_esq(sq) { return sq == "-" ? 0 : parse_sq(sq); }
+function print_esq(sq) { return sq ? print_sq(sq) : "-"; }
 function print_sq(i) {
     let f = print_file(i % 10 - 1);
     let r = print_rank(9 - Math.floor(i / 10));
@@ -77,7 +89,11 @@ function do_move(m) {
     let piece = brd[fr];
     brd = brd.slice(0, fr) + empty + brd.slice(fr + 1);
     brd = brd.slice(0, to) + piece + brd.slice(to + 1);
-    clr = clr == "w" ? "b" : "w";
+    if (clr == "w") {
+        clr = "b";
+    } else {
+        clr = "w";
+    }
     // TODO: update other pos params
 }
 function undo_move() {
@@ -86,20 +102,43 @@ function undo_move() {
 
 // TODO: legal moves
 function gen_moves() {
-    let i, j, p, q, t, d;
+    let i, j, p, q, d;
     let moves = [];
     if (clr == "w") {
         var us = wpieces, them = bpieces, F = N, start_rank = 8;
+        var _k = "K", _q = "Q", _r = "R", sqa = A1;
     } else {
         var us = bpieces, them = wpieces, F = S, start_rank = 3;
+        var _k = "k", _q = "q", _r = "r", sqa = A8;
     }
-    // TODO: castling moves
+    if (
+        ctl.includes(_k) &&
+        brd[sqa + 5] == empty &&
+        brd[sqa + 6] == empty &&
+        brd[sqa + 7] == _r &&
+        !is_attacked(sqa + 4, them) && 
+        !is_attacked(sqa + 5, them) && 
+        !is_attacked(sqa + 6, them)
+    ) {
+        moves.push([sqa + 4, sqa + 6]);
+    }
+    if (
+        ctl.includes(_q) &&
+        brd[sqa + 1] == empty &&
+        brd[sqa + 2] == empty &&
+        brd[sqa + 3] == empty &&
+        brd[sqa] == _r &&
+        !is_attacked(sqa + 4, them) && 
+        !is_attacked(sqa + 3, them) && 
+        !is_attacked(sqa + 2, them)
+    ) {
+        moves.push([sqa + 4, sqa + 2]);
+    }
     for (i = start_sq; i < end_sq; i++) {
         p = brd[i];
         if (!us.includes(p)) { continue; }
-        t = p.toLowerCase();
-        if (t == "p") {
-            // TODO: pawn moves
+        if ("Pp".includes(p)) {
+            // TODO: pawn promotion
             for (d of [E, W]) {
                 j = i + F + d;
                 q = brd[j];
@@ -107,7 +146,7 @@ function gen_moves() {
                     moves.push([i, j]);
                 }
             }
-
+            
             j = i + F;
             q = brd[j];
             if (q == empty) {
@@ -116,24 +155,37 @@ function gen_moves() {
                 q = brd[j];
                 if (q == empty && Math.floor(i / 10) == start_rank) {
                     moves.push([i, j]);
-                    // set enpassant square
-                    esq = j - F;
                 }
             }
         } else {
-            for (d of dir[t]) {
+            for (d of dir[p]) {
                 for (j = i + d; ; j += d) {
                     q = brd[j];
                     if (us.includes(q)) { break; }
                     if (offside.includes(q)) { break; }
                     moves.push([i, j]);
-                    if (them.includes(q)) { break; }
-                    if ("nk".includes(t)) { break; }
+                    if (q != empty) { break; }
+                    if ("nkNK".includes(p)) { break; }
                 }
             }
         }
     }
     return moves;
+}
+
+function is_attacked(i, them) {
+    let j, p, q, d;
+    for (q of them) {
+        for (d of dir[q]) {
+            for (j = i - d; ; j -= d) {
+                p = brd[j];
+                if (offside.includes(p)) { break; }
+                if (p == q) { return true; }
+                if (p != empty) { break; }
+            }
+        }
+    }
+    return false;
 }
 
 parse_fen(start_fen);
