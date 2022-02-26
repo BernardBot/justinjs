@@ -1,4 +1,5 @@
 start_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+kiwi_fen = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
 N = -10, S = 10, E = 1, W = -1;
 A1 = 91, H1 = 98, A8 = 21, H8 = 28;
 start_sq = A8, end_sq = H1 + 1;
@@ -12,6 +13,10 @@ dir = {
 };
 files = "abcdefgh";
 ranks = "12345678";
+wpieces = "PNBRQK";
+bpieces = "pnbrqk";
+empty = ".";
+offside = " \n";
 function parse_fen(fen) {
     [plc, clr, ctl, esq, hlf, fll] = fen.split(" ");
     brd = "         \n         \n " +
@@ -56,15 +61,78 @@ function print_sq(i) {
     return f + r;
 }
 function parse_move(move) {
-    
+    return [parse_sq(move), parse_sq(move.slice(2))];
+}
+function print_move(m) {
+    return print_sq(m[0]) + print_sq(m[1]);
 }
 
 stk = [];
 function push() { stk.push(print_fen()); }
 function pop() { parse_fen(stk.pop()); }
 
+function do_move(m) {
+    push();
+    let [fr, to] = m;
+    let piece = brd[fr];
+    brd = brd.slice(0, fr) + empty + brd.slice(fr + 1);
+    brd = brd.slice(0, to) + piece + brd.slice(to + 1);
+    clr = clr == "w" ? "b" : "w";
+    // TODO: update other pos params
+}
+function undo_move() {
+    pop();
+}
+
+// TODO: legal moves
 function gen_moves() {
+    let i, j, p, q, t, d;
     let moves = [];
+    if (clr == "w") {
+        var us = wpieces, them = bpieces, F = N, start_rank = 8;
+    } else {
+        var us = bpieces, them = wpieces, F = S, start_rank = 3;
+    }
+    // TODO: castling moves
+    for (i = start_sq; i < end_sq; i++) {
+        p = brd[i];
+        if (!us.includes(p)) { continue; }
+        t = p.toLowerCase();
+        if (t == "p") {
+            // TODO: pawn moves
+            for (d of [E, W]) {
+                j = i + F + d;
+                q = brd[j];
+                if (them.includes(q) || j == esq) {
+                    moves.push([i, j]);
+                }
+            }
+
+            j = i + F;
+            q = brd[j];
+            if (q == empty) {
+                moves.push([i, j]);
+                j = i + F + F;
+                q = brd[j];
+                if (q == empty && Math.floor(i / 10) == start_rank) {
+                    moves.push([i, j]);
+                    // set enpassant square
+                    esq = j - F;
+                }
+            }
+        } else {
+            for (d of dir[t]) {
+                for (j = i + d; ; j += d) {
+                    q = brd[j];
+                    if (us.includes(q)) { break; }
+                    if (offside.includes(q)) { break; }
+                    moves.push([i, j]);
+                    if (them.includes(q)) { break; }
+                    if ("nk".includes(t)) { break; }
+                }
+            }
+        }
+    }
     return moves;
 }
 
