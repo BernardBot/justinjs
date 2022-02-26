@@ -89,27 +89,28 @@ function do_move(m) {
     let piece = brd[fr];
     brd = brd.slice(0, fr) + empty + brd.slice(fr + 1);
     brd = brd.slice(0, to) + piece + brd.slice(to + 1);
+    // TODO: update other pos params
     if (clr == "w") {
         clr = "b";
     } else {
         clr = "w";
     }
-    // TODO: update other pos params
 }
 function undo_move() {
     pop();
 }
 
-// TODO: legal moves
 function gen_moves() {
     let i, j, p, q, d;
     let moves = [];
+    let us, them, F, start_rank;
+    let _k, _q, _r, sqa;
     if (clr == "w") {
-        var us = wpieces, them = bpieces, F = N, start_rank = 8;
-        var _k = "K", _q = "Q", _r = "R", sqa = A1;
+        us = wpieces, them = bpieces, F = N, start_rank = 8;
+        _k = "K", _q = "Q", _r = "R", sqa = A1;
     } else {
-        var us = bpieces, them = wpieces, F = S, start_rank = 3;
-        var _k = "k", _q = "q", _r = "r", sqa = A8;
+        us = bpieces, them = wpieces, F = S, start_rank = 3;
+        _k = "k", _q = "q", _r = "r", sqa = A8;
     }
     if (
         ctl.includes(_k) &&
@@ -161,8 +162,8 @@ function gen_moves() {
             for (d of dir[p]) {
                 for (j = i + d; ; j += d) {
                     q = brd[j];
-                    if (us.includes(q)) { break; }
                     if (offside.includes(q)) { break; }
+                    if (us.includes(q)) { break; }
                     moves.push([i, j]);
                     if (q != empty) { break; }
                     if ("nkNK".includes(p)) { break; }
@@ -175,17 +176,55 @@ function gen_moves() {
 
 function is_attacked(i, them) {
     let j, p, q, d;
-    for (q of them) {
-        for (d of dir[q]) {
+    for (p of them) {
+        for (d of dir[p]) {
             for (j = i - d; ; j -= d) {
-                p = brd[j];
-                if (offside.includes(p)) { break; }
-                if (p == q) { return true; }
-                if (p != empty) { break; }
+                q = brd[j];
+                if (offside.includes(q)) { break; }
+                if (q == p) { return true; }
+                if (q != empty) { break; }
+                if ("pnkPNK".includes(p)) { break; }
             }
         }
     }
     return false;
+}
+
+// TODO: legal moves
+function gen_legal_moves() {
+    let moves = [];
+    let i, them;
+    if (clr == "w") {
+        i = brd.indexOf("K"), them = bpieces;
+    } else {
+        i = brd.indexOf("k"), them = wpieces;
+    }
+    for (let move of gen_moves()) {
+        do_move(move);
+        if (!is_attacked(i, them)) {
+            moves.push(move);
+        }
+        undo_move();
+    }
+    return moves;
+}
+function perft(depth) {
+    if (depth < 1) {
+        return 1;
+    }
+    let n = 0;
+    for (let move of gen_legal_moves()) {
+        do_move(move);
+        n += perft(depth - 1);
+        undo_move();
+    }
+    return n;
+}
+
+function timeit(fun) {
+    let t = Date.now();
+    fun();
+    return Date.now() - t;
 }
 
 parse_fen(start_fen);
