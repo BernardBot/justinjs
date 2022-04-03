@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+	<table>
+		<thead>
+			<tr>
+				<th>Source</th>
+				<th width="150">Hovered color</th>
+				<th width="150">Selected color</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>
+					<canvas id="canvas" width="300" height="227"></canvas>
+				</td>
+				<td align="center" class="color-cell" id="hovered-color"></td>
+				<td align="center" class="color-cell" id="selected-color"></td>
+			</tr>
+		</tbody>
+	</table>
+    <script>
+        var img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = 'https://i.chzbgr.com/maxW500/1691290368/h07F7F378/';
+        var canvas = document.getElementById('canvas');
+        var ctx = canvas.getContext('2d');
+        img.onload = function () {
+            console.log(img);
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            img.style.display = 'none';
+        };
+        var hoveredColor = document.getElementById('hovered-color');
+        var selectedColor = document.getElementById('selected-color');
+
+        function pick(event, destination) {
+            var x = event.layerX;
+            var y = event.layerY;
+            var pixel = ctx.getImageData(x, y, 1, 1);
+            var data = pixel.data;
+
+            const rgba = `rgba(${data[0]}, ${data[1]}, ${data[2]}, ${data[3] / 255})`;
+            destination.style.background = rgba;
+            destination.textContent = rgba;
+
+            return rgba;
+        }
+
+        canvas.addEventListener('mousemove', function (event) {
+            pick(event, hoveredColor);
+        });
+        canvas.addEventListener('click', function (event) {
+            pick(event, selectedColor);
+        });
+
+    </script>
+</body>
+
+</html>

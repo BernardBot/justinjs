@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        canvas = document.body.appendChild(document.createElement("canvas"));
+        div = document.body.appendChild(document.createElement("div"));
+
+        ctx = canvas.getContext("2d");
+        canvas.height = 500;
+        canvas.width = 500;
+        canvas.style.border = "1px solid black";
+
+        s = 200;
+        p = 40;
+
+        cx = canvas.width / 2;
+        cy = canvas.height / 2;
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = "red";
+            ctx.fillRect(cx - s / 2, cy - s / 2, s, s);
+
+            ctx.fillStyle = "green";
+            ctx.fillRect(cx - s / 2 - p, cy - s / 2 - p, p, p);
+            ctx.fillRect(cx - s / 2 - p, cy + s / 2,     p, p);
+            ctx.fillRect(cx + s / 2,     cy + s / 2,     p, p);
+            ctx.fillRect(cx + s / 2,     cy - s / 2 - p, p, p);
+
+            ctx.fillStyle = "blue";
+            ctx.fillRect(cx - s / 2,     cy - s / 2 - p, s, p);
+            ctx.fillRect(cx - s / 2,     cy + s / 2,     s, p);
+            ctx.fillRect(cx + s / 2,     cy - s / 2,     p, s);
+            ctx.fillRect(cx - s / 2 - p, cy - s / 2,     p, s);
+
+            div.innerHTML = `
+<pre>
+red: ${s * s }, green: ${4 * p * p}, blue: ${4 * s * p}
+${s * s > 4 * p * p + 4 * s * p}
+s: ${s}, p: ${p}
+</pre>
+`;
+        }
+
+        function loop() {
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        s_input = document.body.appendChild(document.createElement("input"));
+        s_input.type = "range";
+        s_input.min = 0;
+        s_input.max = canvas.width;
+        s_input.value = s;
+
+        s_input.oninput = function () {
+            s = s_input.value;
+        }
+
+        p_input = document.body.appendChild(document.createElement("input"));
+        p_input.type = "range";
+        p_input.min = 0;
+        p_input.max = canvas.width / 2;
+        p_input.value = p;
+
+        p_input.oninput = function () {
+            p = p_input.value;
+        }
+
+        loop();
+    </script>
+</body>
+</html>

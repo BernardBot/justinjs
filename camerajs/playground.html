@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <canvas></canvas>
+    <div>
+        <input type="file" accept="image/png, image/jpeg">
+    </div>
+    <script>
+        var canvas = document.querySelector('canvas');
+        var ctx = canvas.getContext('2d');
+        var img_input = document.querySelector('input');
+        
+        var img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = function () {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+        };
+        img.src = "https://i.chzbgr.com/maxW500/1691290368/h07F7F378/";
+
+        img_input.onchange = function (event) {
+            var file = event.target.files[0];
+            var reader = new FileReader();
+            reader.onload = function (event) {
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        function reset() {
+            img.src = "https://i.chzbgr.com/maxW500/1691290368/h07F7F378/";
+        }
+
+        function get_imdata() {
+            return ctx.getImageData(0, 0, canvas.width, canvas.height);
+        }
+
+        function put_imdata(imdata) {
+            ctx.putImageData(imdata, 0, 0);
+        }
+
+        function transform(fun) {
+            let imdata = get_imdata();
+            fun(imdata);
+            put_imdata(imdata);
+        }
+    </script>
+    <script src="imlib.js"></script>
+</body>
+
+</html>

@@ -23,11 +23,19 @@
         text.oninput = function() {
             try {
                 const parsed = parser(text.value);
+                /*
+                If there are no possible parsings given the current input,
+                but in the future there might be results if you feed it more
+                strings, then nearley will temporarily set the results array
+                to the empty array, [].
+
+                    - https://nearley.js.org/docs/parser
+                */
                 if (parsed[0]) {
                     const value = eval_sexps(parsed[0]);
                     result.innerHTML = JSON.stringify(value);
                 } else {
-                    throw new Error("No parse");
+                    result.innerHTML = "";
                 }
             } catch(e) {
                 console.log(e);
