@@ -31,7 +31,7 @@
         63 64 65 | 66 67 68 | 69 70 71
         72 73 74 | 75 76 77 | 78 79 80
         */
-        let empty_sudoku = [...Array(81).keys()].map(x => 0);
+        let empty_sudoku = new Array(81).fill(0);
         // https://sandiway.arizona.edu/sudoku/examples.html
         let example_sudoku = [
             0, 0, 0, 2, 6, 0, 7, 0, 1,
@@ -95,12 +95,11 @@
                 if (neighbour_values.has(val)) {
                     continue;
                 }
-                let old_val = sudoku[i];
                 sudoku[i] = val;
                 if (solve_sudoku(sudoku, timeout)) {
                     return true;
                 }
-                sudoku[i] = old_val;
+                sudoku[i] = 0;
             }
             return false;
         }
