@@ -1,123 +1,45 @@
-class MyCanvas {
-    constructor() {
-        this.canvas = document.createElement('canvas');
-        this.ctx = this.canvas.getContext('2d');
-        document.body.appendChild(this.canvas);
-    }
+canvas = document.querySelector('canvas');
+ctx = canvas.getContext('2d');
+im = new Image();
+im.src = 'ben.jpg';
+im.onload = function() {
+    canvas.width = im.width;
+    canvas.height = im.height;
+    ctx.drawImage(im, 0, 0);
+    imdata = ctx.getImageData(0, 0, im.width, im.height);
+};
 
-    remove() {
-        document.body.removeChild(this.canvas);
-    }
+function conv3(imdata, kernel) {
+    let d = imdata.data;
+    let dd = d.slice();
+    
+    const w = imdata.width;
+    const h = imdata.height;
+    
+    const a = (w + 1) * 4;
+    const b = w * 4;
+    const c = (w - 1) * 4;
 
-    im2imdata(im) {
-        this.drawImage(im);
-        return this.ctx.getImageData(0, 0, im.width, im.height);
-    }
-
-    setImageDims(im) {
-        this.canvas.width = im.width;
-        this.canvas.height = im.height;
-    }
-
-    drawImage(im) {
-        this.setImageDims(im);
-        this.ctx.drawImage(im, 0, 0);
-    }
-
-    putImageData(im) {
-        this.setImageDims(im);
-        this.ctx.putImageData(im, 0, 0);
-    }
-}
-
-async function imread(src) {
-    let im = new Image();
-    im.src = src;
-    return new Promise((resolve, reject) => {
-        im.onload = () => resolve(im);
-        im.onerror = reject;
-    });
-}
-
-async function setup() {
-    mycanvas = new MyCanvas();
-    im = await imread("ben.jpg");
-    imdata = mycanvas.im2imdata(im);
-}
-setup();
-
-// imdata functions
-function imdata_sum(imdata) {
-    return imdata.data.reduce((a, b) => a + b);
-}
-
-// which values should be included (r, g, b, a)
-function imdata_mean(imdata) {
-    return imdata_sum(imdata) / imdata.data.length;
-}
-
-function imdata_invert(imdata) {
-    let data = imdata.data;
-    for (let i = 0; i < data.length; i += 4) {
-        data[i] = 255 - data[i];
-        data[i + 1] = 255 - data[i + 1];
-        data[i + 2] = 255 - data[i + 2];
-    }
-    return imdata;
-}
-
-function imdata_grayscale(imdata) {
-    let data = imdata.data;
-    for (let i = 0; i < data.length; i += 4) {
-        let avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-        data[i] = avg;
-        data[i + 1] = avg;
-        data[i + 2] = avg;
-    }
-    return imdata;
-}
-
-function imdata_conv3(imdata, kernel) {
-    // TODO: generalize to n-dim convolution
-    let data = imdata.data;
-    let width = imdata.width;
-    let height = imdata.height;
-    let newdata = new Uint8ClampedArray(data.length);
-
-    for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-            let r = g = b = 0;
-
-            for (let ky = 0; ky < 3; ky++) {
-                for (let kx = 0; kx < 3; kx++) {
-                    let x2 = x + kx - 1;
-                    let y2 = y + ky - 1;
-
-                    if (x2 < 0 || x2 >= width || y2 < 0 || y2 >= height) {
-                        continue;
-                    }
-
-                    let i = (y2 * width + x2) * 4;
-                    let ki = ky * 3 + kx;
-                    r += data[i] * kernel[ki];
-                    g += data[i + 1] * kernel[ki];
-                    b += data[i + 2] * kernel[ki];
-                }
+    for (let y = 1; y < h - 1; y++) {
+        for (let x = 1; x < w - 1; x++) {
+            let i = (y * w + x) * 4;
+            for (let j = i; j < i + 3; j++) {
+                dd[j] = (
+                    d[j - a] * kernel[0] +
+                    d[j - b] * kernel[1] +
+                    d[j - c] * kernel[2] +
+                    d[j - 4] * kernel[3] +
+                    d[j]     * kernel[4] +
+                    d[j + 4] * kernel[5] +
+                    d[j + c] * kernel[6] +
+                    d[j + b] * kernel[7] +
+                    d[j + a] * kernel[8]
+                );
             }
-
-            let i = (y * width + x) * 4;
-            newdata[i] = r;
-            newdata[i + 1] = g;
-            newdata[i + 2] = b;
-            newdata[i + 3] = 255;
         }
     }
 
-    for (let i = 0; i < data.length; i++) {
-        data[i] = newdata[i];
-    }
-
-    return imdata;
+    return new ImageData(dd, w, h);
 }
 
 ZERO_KERNEL = [
@@ -161,3 +83,34 @@ GUASSIANBLUR_KERNEL = [
     2, 4, 2,
     1, 2, 1,
 ].map(x => x / 16);
+
+// https://setosa.io/ev/image-kernels/
+EMBOSS_KERNEL = [
+    -2, -1, 0,
+    -1, 1, 1,
+    0, 1, 2,
+];
+
+BOTTOMSOBEL_KERNEL = [
+    -1, -2, -1,
+    0, 0, 0,
+    1, 2, 1,
+];
+
+LEFTSOBEL_KERNEL = [
+    1, 0, -1,
+    2, 0, -2,
+    1, 0, -1,
+];
+
+RIGHTSOBEL_KERNEL = [
+    -1, 0, 1,
+    -2, 0, 2,
+    -1, 0, 1,
+];
+
+TOPSOBEL_KERNEL = [
+    1, 2, 1,
+    0, 0, 0,
+    -1, -2, -1,
+];
