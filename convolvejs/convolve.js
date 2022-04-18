@@ -1,21 +1,26 @@
+// setup
 canvas = document.querySelector('canvas');
 ctx = canvas.getContext('2d');
 im = new Image();
-im.src = 'ben.jpg';
-im.onload = function() {
+im.src = 'ben.jpg'; // change to get different image
+im.onload = function () {
     canvas.width = im.width;
     canvas.height = im.height;
     ctx.drawImage(im, 0, 0);
     imdata = ctx.getImageData(0, 0, im.width, im.height);
 };
 
+// example usage:
+// cdata = conv3(imdata);
+// ctx.putImageData(cdata, 0, 0);
+
 function conv3(imdata, kernel) {
     let d = imdata.data;
     let dd = d.slice();
-    
+
     const w = imdata.width;
     const h = imdata.height;
-    
+
     const a = (w + 1) * 4;
     const b = w * 4;
     const c = (w - 1) * 4;
@@ -29,7 +34,7 @@ function conv3(imdata, kernel) {
                     d[j - b] * kernel[1] +
                     d[j - c] * kernel[2] +
                     d[j - 4] * kernel[3] +
-                    d[j]     * kernel[4] +
+                    d[j] * kernel[4] +
                     d[j + 4] * kernel[5] +
                     d[j + c] * kernel[6] +
                     d[j + b] * kernel[7] +
