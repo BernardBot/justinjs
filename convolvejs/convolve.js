@@ -11,8 +11,10 @@ im.onload = function () {
 };
 
 // example usage:
-// cdata = conv3(imdata);
-// ctx.putImageData(cdata, 0, 0);
+function example() {
+    cdata = conv3(imdata, RIDGE_KERNEL_V2);
+    ctx.putImageData(cdata, 0, 0);
+}
 
 function conv3(imdata, kernel) {
     let d = imdata.data;
