@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <canvas></canvas>
+    <div>
+        spirals: <input id="spirals_input" type="number" min="1" max="100">
+    </div>
+    <div>
+        whirls: <input id="whirls_input" type="number" min="1" max="100">
+    </div>
+    <script>
+        function polyskelion(spirals, whirls, scale, dt) {
+            e = Math.PI / 2 + 2 * Math.PI * whirls
+            e1 = e + Math.PI / spirals
+            e2 = e - Math.PI / spirals
+
+            mag = scale * Math.sin(Math.PI / spirals) * 2 / Math.PI / (1 + 4 * whirls)
+
+            dw = 2 * Math.PI / spirals
+
+            xs = []
+            ys = []
+            for (let w = dw * (spirals - 1); w >= 0; w -= dw) {
+                let cx = scale * Math.cos(w);
+                let cy = scale * Math.sin(w);
+
+                for (let t = e1; t > dt; t -= dt) {
+                    let r = mag * t;
+
+                    let x = cx + r * Math.cos(w + t);
+                    let y = cy + r * Math.sin(w + t);
+
+                    xs.push(x);
+                    ys.push(y);
+                }
+
+                for (let t = dt; t <= e2; t += dt) {
+                    let r = -mag * t;
+
+                    let x = cx + r * Math.cos(w + t);
+                    let y = cy + r * Math.sin(w + t);
+
+                    xs.push(x);
+                    ys.push(y);
+                }
+            }
+            // connect the ends
+            xs.push(xs[0]);
+            ys.push(ys[0]);
+
+            return [xs, ys];
+        }
+
+
+        canvas = document.querySelector('canvas');
+        ctx = canvas.getContext('2d');
+        canvas.width = 500;
+        canvas.height = 500;
+        cx = canvas.width / 2;
+        cy = canvas.height / 2;
+
+        spirals = 3;
+        whirls = 4;
+        scale = Math.min(canvas.width, canvas.height) / 4;
+        dt = 0.1;
+
+        [xs, ys] = polyskelion(spirals, whirls, scale, dt);
+        draw(xs, ys);
+
+        function draw(xs, ys) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.beginPath();
+            ctx.moveTo(cx + xs[0], cy + ys[0]);
+            for (let i = 1; i < xs.length; i++) {
+                let x = xs[i];
+                let y = ys[i];
+                ctx.lineTo(cx + x, cy + y);
+            }
+            ctx.stroke();
+        }
+
+        spirals_input = document.querySelector('#spirals_input');
+        spirals_input.addEventListener('input', function () {
+            spirals = parseInt(spirals_input.value);
+            [xs, ys] = polyskelion(spirals, whirls, scale, dt);
+            draw(xs, ys);
+        });
+
+        whirls_input = document.querySelector('#whirls_input');
+        whirls_input.addEventListener('input', function () {
+            whirls = parseInt(whirls_input.value);
+            [xs, ys] = polyskelion(spirals, whirls, scale, dt);
+            draw(xs, ys);
+        });
+    </script>
+</body>
+
+</html>
