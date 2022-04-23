@@ -28,7 +28,7 @@
 
             xs = []
             ys = []
-            for (let w = dw * (spirals - 1); w >= 0; w -= dw) {
+            for (let w = dw * (spirals - 1); w >= -1e-5; w -= dw) {
                 let cx = scale * Math.cos(w);
                 let cy = scale * Math.sin(w);
 
