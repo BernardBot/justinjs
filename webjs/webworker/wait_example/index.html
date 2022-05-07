@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<textarea></textarea>
+
+<body>
+    <script>
+        function wait(ms) {
+            let start = new Date().getTime();
+            while (new Date().getTime() < start + ms);
+        }
+
+        function wait_async(ms) {
+            return new Promise(resolve => {
+                wait(ms);
+                resolve();
+            });
+        }
+
+        function wait_worker(ms) {
+            const worker = new Worker("worker.js");
+
+            worker.postMessage(ms);
+            worker.onmessage = function (e) {
+                console.log("Got from worker: " + e.data);
+            }
+        }
+    </script>
+</body>
+
+</html>
