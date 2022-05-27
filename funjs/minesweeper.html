@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <canvas></canvas>
+    <script>
+        canvas = document.querySelector("canvas");
+        ctx = canvas.getContext("2d");
+
+        w = 10;
+        h = 10;
+        nbs = [-w-1, -w, -w+1, -1, 1, w-1, w, w+1];
+        wh = w * h;
+        grid = [];
+
+        // mine
+        // hidden
+        // count
+        p = 0.1;
+        for (let i = 0; i < wh; i++) {
+            grid.push({ mine : Math.random() < p, hidden : true});
+        }
+        for (let i = 0; i < wh; i++) {
+            grid[i].count = 0;
+            for (let j of nbs) {
+                if (grid[i+j] && grid[i+j].mine) {
+                    grid[i].count++;
+                }
+            }
+        }
+
+        s = 30;
+        canvas.width = w * s;
+        canvas.height = h * s;
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < h; i++) {
+                for (let j = 0; j < w; j++) {
+                    if (grid[i*w+j].hidden) {
+                        ctx.fillStyle = "grey";
+                        ctx.fillRect(j*s, i*s, s, s);
+                    } else {
+                        ctx.fillStyle = "white";
+                        ctx.fillRect(j*s, i*s, s, s);
+                        if (grid[i*w+j].mine) {
+                            ctx.fillStyle = "red";
+                            ctx.fillRect(j*s, i*s, s, s);
+                        } else {
+                            ctx.fillStyle = "black";
+                            ctx.fillText(grid[i*w+j].count, j*s+s/2, i*s+s/2);
+                        }
+                    }
+                    ctx.fillStyle = "black";
+                    ctx.strokeRect(j*s, i*s, s, s);
+                }
+            }
+        }
+
+        draw();
+
+        canvas.onclick = function(event) {
+            let x = Math.floor(event.offsetX / s);
+            let y = Math.floor(event.offsetY / s);
+            let i = y * w + x;
+            let cell = grid[i];
+
+            if (cell.hidden) {
+                cell.hidden = false;
+                if (cell.mine) {
+                    alert("you lose");
+                } else {
+                    if (cell.count == 0) {
+                        for (let j of nbs) {
+                            if (grid[i+j] && grid[i+j].hidden) {
+                                grid[i+j].hidden = false;
+                                if (grid[i+j].count == 0) {
+                                    for (let k of nbs) {
+                                        if (grid[i+j+k] && grid[i+j+k].hidden) {
+                                            grid[i+j+k].hidden = false;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            draw();
+        };
+    </script>
+</body>
+</html>
