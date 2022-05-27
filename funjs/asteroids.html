@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <canvas></canvas>
+    <script>
+        canvas = document.querySelector("canvas");
+        ctx = canvas.getContext("2d");
+        
+        canvas.width = canvas.height = 500;
+
+        n = 100;
+        s = 10;
+        asteroids = [];
+        for (let i = 0; i < n; i++) {
+            asteroids.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                r: Math.random() * 10 + 5,
+                vx: Math.random() * 2 - 1,
+                vy: Math.random() * 2 - 1
+            });
+        }
+
+        function draw_asteroid(asteroid) {
+            ctx.beginPath();
+            ctx.arc(asteroid.x, asteroid.y, asteroid.r, 0, 2 * Math.PI);
+            ctx.fillStyle = "black";
+            ctx.fill();
+        }
+
+        function update_asteroid(asteroid) {
+            asteroid.x = (asteroid.x + asteroid.vx + canvas.width) % canvas.width;
+            asteroid.y = (asteroid.y + asteroid.vy + canvas.height) % canvas.height;
+        }
+
+        function collides(a1, a2) {
+            let dx = a1.x - a2.x;
+            let dy = a1.y - a2.y;
+            let dist = Math.hypot(dx, dy);
+            return dist < a1.r + a2.r;
+        }
+
+        function step() {
+            let marked = [];
+            for (let i = 0; i < asteroids.length; i++) {
+                for (let j = i + 1; j < asteroids.length; j++) {
+                    if (collides(asteroids[i], asteroids[j])) {
+                        marked.push(i);
+                        marked.push(j);
+                    }
+                }
+            }
+            
+            asteroids = asteroids.filter((asteroid, i) => !marked.includes(i));
+
+            for (let asteroid of asteroids) {
+                update_asteroid(asteroid);
+                draw_asteroid(asteroid);
+            }
+        }
+
+        function loop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            step();
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+    </script>
+</body>
+
+</html>
