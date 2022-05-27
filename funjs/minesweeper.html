@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 </head>
+
 <body>
     <canvas></canvas>
     <script>
@@ -14,84 +16,138 @@
 
         w = 10;
         h = 10;
-        nbs = [-w-1, -w, -w+1, -1, 1, w-1, w, w+1];
-        wh = w * h;
-        grid = [];
-
-        // mine
-        // hidden
-        // count
-        p = 0.1;
-        for (let i = 0; i < wh; i++) {
-            grid.push({ mine : Math.random() < p, hidden : true});
-        }
-        for (let i = 0; i < wh; i++) {
-            grid[i].count = 0;
-            for (let j of nbs) {
-                if (grid[i+j] && grid[i+j].mine) {
-                    grid[i].count++;
-                }
-            }
-        }
-
+        n = 10;
         s = 30;
         canvas.width = w * s;
         canvas.height = h * s;
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let i = 0; i < h; i++) {
-                for (let j = 0; j < w; j++) {
-                    if (grid[i*w+j].hidden) {
-                        ctx.fillStyle = "grey";
-                        ctx.fillRect(j*s, i*s, s, s);
-                    } else {
-                        ctx.fillStyle = "white";
-                        ctx.fillRect(j*s, i*s, s, s);
-                        if (grid[i*w+j].mine) {
-                            ctx.fillStyle = "red";
-                            ctx.fillRect(j*s, i*s, s, s);
-                        } else {
-                            ctx.fillStyle = "black";
-                            ctx.fillText(grid[i*w+j].count, j*s+s/2, i*s+s/2);
-                        }
-                    }
-                    ctx.fillStyle = "black";
-                    ctx.strokeRect(j*s, i*s, s, s);
-                }
-            }
-        }
-
-        draw();
+        grid = new Grid(w, h, n);
 
         canvas.onclick = function(event) {
             let x = Math.floor(event.offsetX / s);
             let y = Math.floor(event.offsetY / s);
-            let i = y * w + x;
-            let cell = grid[i];
+            grid.reveal(x, y);
+            grid.draw(s, canvas, ctx);
+            if (grid.has_won()) {
+                grid.reveal_all(x, y);
+                grid.draw(s, canvas, ctx);
+                alert("You win!");
+            } else if (grid.cells[x][y].mine) {
+                grid.reveal_all(x, y);
+                grid.draw(s, canvas, ctx);
+                alert("You Lose!");
+            }
+        };
 
-            if (cell.hidden) {
-                cell.hidden = false;
-                if (cell.mine) {
-                    alert("you lose");
-                } else {
-                    if (cell.count == 0) {
-                        for (let j of nbs) {
-                            if (grid[i+j] && grid[i+j].hidden) {
-                                grid[i+j].hidden = false;
-                                if (grid[i+j].count == 0) {
-                                    for (let k of nbs) {
-                                        if (grid[i+j+k] && grid[i+j+k].hidden) {
-                                            grid[i+j+k].hidden = false;
-                                        }
-                                    }
-                                }
+        function ix(arr, i, j) {
+            try {
+                return arr[i][j] || {};
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function Grid(w, h, n) {
+            this.w = w;
+            this.h = h;
+            this.cells = [];
+
+            for (let x = 0; x < w; x++) {
+                this.cells[x] = [];
+                for (let y = 0; y < h; y++) {
+                    this.cells[x][y] = new Cell(x, y);
+                }
+            }
+
+            for (let i = 0; i < n; i++) {
+                do {
+                    var x = Math.floor(Math.random() * w);
+                    var y = Math.floor(Math.random() * h);
+                } while (this.cells[x][y].mine);
+                this.cells[x][y].mine = true;
+            }
+
+            for (let x = 0; x < w; x++) {
+                for (let y = 0; y < h; y++) {
+                    for (let i = -1; i <= 1; i++) {
+                        for (let j = -1; j <= 1; j++) {
+                            if (ix(this.cells, x + i, y + j).mine) {
+                                this.cells[x][y].count++;
                             }
                         }
                     }
+                    this.cells[x][y].count -= this.cells[x][y].mine;
                 }
             }
-            draw();
+        }
+
+        Grid.prototype.reveal = function(x, y) {
+            this.cells[x][y].hidden = false;
+            if (this.cells[x][y].count == 0) {
+                this.flood_fill(x, y);
+            }
         };
+
+        Grid.prototype.reveal_all = function() {
+            for (let x = 0; x < this.w; x++) {
+                for (let y = 0; y < this.h; y++) {
+                    this.cells[x][y].hidden = false;
+                }
+            }
+        };
+
+        Grid.prototype.flood_fill = function(x, y) {
+            for (let i = -1; i <= 1; i++) {
+                for (let j = -1; j <= 1; j++) {
+                    let nb = ix(this.cells, x + i, y + j);
+                    if (nb.hidden) {
+                        this.reveal(x + i, y + j);
+                    }
+                }
+            }
+        }
+
+        Grid.prototype.draw = function(s, canvas, ctx) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let x = 0; x < w; x++) {
+                for (let y = 0; y < h; y++) {
+                    let cell = this.cells[x][y];
+                    if (cell.hidden) {
+                        ctx.fillStyle = "grey";
+                        ctx.fillRect(x * s, y * s, s, s);
+                    } else if (cell.mine) {
+                        ctx.fillStyle = "red";
+                        ctx.fillRect(x * s, y * s, s, s);
+                    } else {
+                        ctx.fillStyle = "white";
+                        ctx.fillRect(x * s, y * s, s, s);
+                        ctx.fillStyle = "black";
+                        ctx.font = "20px Arial";
+                        ctx.fillText(cell.count, x * s + s * 0.25, y * s + s * 0.75);
+                    }
+                    ctx.fillStyle = "black";
+                    ctx.strokeRect(x * s, y * s, s, s);
+                }
+            }
+        };
+
+        Grid.prototype.has_won = function() {
+            for (let x = 0; x < w; x++) {
+                for (let y = 0; y < h; y++) {
+                    if (this.cells[x][y].hidden && !this.cells[x][y].mine) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        function Cell(x, y) {
+            this.hidden = true;
+            this.mine = false;
+            this.count = 0;
+        }
+        grid.draw(s, canvas, ctx);
     </script>
 </body>
+
 </html>
