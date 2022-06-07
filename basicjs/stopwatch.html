@@ -17,7 +17,6 @@
         div = document.querySelector('div');
 
         t0 = new Date();
-        dt = new Date(new Date() - t0);
         id = undefined;
 
         function start() {
@@ -25,10 +24,7 @@
                 return;
             }
             t0 = new Date() - dt;
-            id = setInterval(function () {
-                dt = new Date(new Date() - t0);
-                draw();
-            });
+            id = setInterval(draw);
         }
         function stop() {
             clearInterval(id);
@@ -36,10 +32,10 @@
         }
         function reset() {
             t0 = new Date();
-            dt = new Date(new Date() - t0);
             draw();
         }
         function draw() {
+            dt = new Date(new Date() - t0);
             div.innerHTML = `${dt.getMinutes()}:${dt.getSeconds()}:${dt.getMilliseconds()}`;
         }
 
