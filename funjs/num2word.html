@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <input>
+    <div></div>
+    <script>
+        first19 = [
+            "",
+            "one",
+            "two",
+            "three",
+            "four",
+            "five",
+            "six",
+            "seven",
+            "eight",
+            "nine",
+            "ten",
+            "eleven",
+            "twelve",
+            "thirteen",
+            "fourteen",
+            "fifteen",
+            "sixteen",
+            "seventeen",
+            "eighteen",
+            "nineteen"
+        ];
+
+        tens = [
+            "",
+            "",
+            "twenty",
+            "thirty",
+            "forty",
+            "fifty",
+            "sixty",
+            "seventy",
+            "eighty",
+            "ninety"
+        ];
+
+        highers = [
+            "hundred",
+            "thousand",
+            "million",
+            "billion",
+        ];
+
+        function _n2w(n) {
+            if (n < 20) {
+                return first19[n];
+            } else if (n < 100) {
+                return tens[Math.floor(n / 10)] + " " + _n2w(n % 10);
+            } else {
+                let log = Math.floor(Math.log(n) / Math.log(1000));
+                let x = Math.max(100, Math.pow(1000, log));
+                return _n2w(Math.floor(n / x)) + " " + highers[log] + " " + _n2w(n % x);
+            }
+        }
+
+        function n2w(n) {
+            if (n == 0) {
+                return "zero";
+            } else {
+                return _n2w(n).trim();
+            }
+        }
+
+        input = document.querySelector("input");
+        div = document.querySelector("div");
+
+        input.oninput = function() {
+            div.innerHTML = n2w(parseInt(this.value));
+        }
+    </script>
+</body>
+</html>
