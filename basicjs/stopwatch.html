@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div></div>
+    <button onclick="start()">Start</button>
+    <button onclick="stop()">Stop</button>
+    <button onclick="reset()">Reset</button>
+    <script>
+        div = document.querySelector('div');
+
+        t0 = new Date();
+        dt = new Date(new Date() - t0);
+        id = undefined;
+
+        function start() {
+            if (id) {
+                return;
+            }
+            t0 = new Date() - dt;
+            id = setInterval(function () {
+                dt = new Date(new Date() - t0);
+                draw();
+            });
+        }
+        function stop() {
+            clearInterval(id);
+            id = undefined;
+        }
+        function reset() {
+            t0 = new Date();
+            dt = new Date(new Date() - t0);
+            draw();
+        }
+        function draw() {
+            div.innerHTML = `${dt.getMinutes()}:${dt.getSeconds()}:${dt.getMilliseconds()}`;
+        }
+
+        draw();
+    </script>
+</body>
+
+</html>
