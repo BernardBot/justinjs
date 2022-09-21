@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script src="guesser.js"></script>
+    <script>
+        qa = {
+            "Mark Rutte": "Minister-president, minister van Algemene Zaken",
+            "Sigrid Kaag": "Minister van Financiën, viceminister-president",
+            "Wopke Hoekstra": "Minister van Buitenlandse Zaken, viceminister-president",
+            "Carola Schouten": "Minister voor Armoedebeleid, Participatie en Pensioenen, minister van Landbouw, Natuur en Voedselkwaliteit, viceminister-president",
+            "Dilan Yeşilgöz-Zegerius": "Minister van Justitie en Veiligheid",
+            "Hanke Bruins Slot": "Minister van Binnenlandse Zaken en Koninkrijksrelaties",
+            "Robbert Dijkgraaf": "Minister van Onderwijs, Cultuur en Wetenschap",
+            "Kajsa Ollongren": "Minister van Defensie",
+            "Mark Harbers": "Minister van Infrastructuur en Waterstaat",
+            "Micky Adriaansens": "Minister van Economische Zaken en Klimaat",
+            "Karien van Gennip": "Minister van Sociale Zaken en Werkgelegenheid",
+            "Ernst Kuipers": "Minister van Volksgezondheid, Welzijn en Sport",
+            "Liesje Schreinemacher": "Minister voor Buitenlandse Handel en Ontwikkelingssamenwerking",
+            "Franc Weerwind": "Minister voor Rechtsbescherming",
+            "Hugo de Jonge": "Minister voor Volkshuisvesting en Ruimtelijke Ordening",
+            "Dennis Wiersma": "Minister voor Primair en Voortgezet Onderwijs",
+            "Rob Jetten": "Minister voor Klimaat en Energie",
+            "Christianne van der Wal-Zeggelink": "Minister voor Natuur en Stikstof",
+            "Conny Helder": "Minister voor Langdurige Zorg en Sport",
+            "Eric van der Burg": "Staatssecretaris van Justitie en Veiligheid",
+            "Alexandra van Huffelen": "Staatssecretaris Koninkrijksrelaties en Digitalisering",
+            "Gunay Uslu": "Staatssecretaris Cultuur en Media",
+            "Marnix van Rij": "Staatssecretaris Fiscaliteit en Belastingdienst",
+            "Aukje de Vries": "Staatssecretaris Toeslagen en Douane",
+            "Christophe van der Maat": "Staatssecretaris van Defensie",
+            "Vivianne Heijnen": "Staatssecretaris van Infrastructuur en Waterstaat",
+            "Hans Vijlbrief": "Staatssecretaris Mijnbouw",
+            "Maarten van Ooijen": "Staatssecretaris van Volksgezondheid, Welzijn en Sport"
+        };
+
+        guesser = new Guesser(invert(qa));
+        guesser.run();
+
+    </script>
+</body>
+</html>
