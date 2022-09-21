@@ -1,13 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 </head>
+
 <body>
-    <script src="guesser.js"></script>
+    <h1>Hello</h1>
+    <input>
+    <button>submit</button>
+    <h2></h2>
+    <button id="next">next</button>
+    <div>
+    </div>
     <script>
         qa = {
             "Mark Rutte": "Minister-president, minister van Algemene Zaken",
@@ -40,9 +48,72 @@
             "Maarten van Ooijen": "Staatssecretaris van Volksgezondheid, Welzijn en Sport"
         };
 
-        guesser = new Guesser(invert(qa));
-        guesser.run();
+        let o = {};
+        for (let key in qa) {
+            o[qa[key]] = key;
+        }
+        qa = o;
 
+        let questions = Object.keys(qa);
+
+        let h1 = document.querySelector("h1");
+        let h2 = document.querySelector("h2");
+        let button = document.querySelector("button");
+        let input = document.querySelector("input");
+        let next = document.querySelector("#next");
+
+        next.onclick = axe_q;
+        button.onclick = show_answer;
+
+        let results = [];
+
+
+        function axe_q() {
+            question = questions.pop();
+
+            if (question) {
+                answer = qa[question];
+                h1.innerHTML = question;
+                next.style.visibility = "hidden";
+                h2.style.visibility = "hidden";
+                input.value = "";
+            } else {
+                show_results();
+            }
+        }
+
+        function show_answer() {
+            next.style.visibility = "visible";
+            h2.style.visibility = "visible";
+            h2.innerHTML = answer;
+            let your_answer = input.value;
+            let is_correct = your_answer.toLocaleLowerCase() == answer.toLocaleLowerCase();
+            h2.style.color = is_correct ? "green" : "red";
+            results.push({ question, answer, is_correct, });
+        }
+
+        function show_results() {
+            document.body.innerHTML = "";
+            for (let result of results) {
+                let p = document.createElement("p");
+                p.innerHTML = result.question + " : " + result.answer;
+                p.style.color = result.is_correct ? "green" : "red";
+                document.body.append(p);
+            }
+        }
+
+        document.addEventListener("keydown", function (event) {
+            if (event.key == "Enter") {
+                if (next.style.visibility == "hidden") {
+                    show_answer();
+                } else {
+                    axe_q();
+                }
+            }
+        });
+
+        window.onload = axe_q;
     </script>
 </body>
+
 </html>
