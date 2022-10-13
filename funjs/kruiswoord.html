@@ -18,7 +18,7 @@
         height = 15;
         size = 50;
 
-        test =
+        const test_crossword =
             "__p___modieus_\n" +
             "__e__mi_iel_te\n" +
             "__s__onverkort\n" +
@@ -31,14 +31,36 @@
             "_______n______\n" +
             "_______g______"
 
-        dictionary = ["mam", "motto", "miniem", "verlaging", "die", "dyk", "iers", "nek", "elk", "linie", "open", "streng", "etna", "modieus", "me", "iel", "onverkort", "relatie", "pen", "beteuterd", "lena", "omlyning", "aken", "kiwi"];
-        class Board {
+        async function word_db(n) {
+            let response = await fetch("https://raw.githubusercontent.com/OpenTaal/opentaal-wordlist/master/wordlist.txt");
+            let text = await response.text();
+            let words = text.split("\n");
+            let shuffled = words.map(w => w.toLocaleLowerCase()).filter(x => x.length < 6).sort(() => Math.random() < 0.5);
+            return shuffled.slice(0, n);
+        }
+
+        window.onload = function () {
+            word_db(10000).then(words => {
+                default_dictionary = words;
+                board = new CrossWord(40, 20);
+                board.build_puzzle(150);
+                board.render(canvas, 50);
+            })
+        }
+
+        const test_dictionary = ["mam", "motto", "miniem", "verlaging", "die", "dyk", "iers", "nek", "elk", "linie", "open", "streng", "etna", "modieus", "me", "iel", "onverkort", "relatie", "pen", "beteuterd", "lena", "omlyning", "aken", "kiwi"];
+
+        class CrossWord {
             static empty = "_";
 
-            constructor(width, height) {
+            constructor(width, height, dictionary) {
                 this.width = width;
                 this.height = height;
-                this.clear_board()
+                if (dictionary == undefined) {
+                    dictionary = default_dictionary;
+                }
+                this.dictionary = dictionary;
+                this.clear_board();
             }
 
             clear_board() {
@@ -46,7 +68,7 @@
                 for (let i = 0; i < this.width; i++) {
                     this.board[i] = [];
                     for (let j = 0; j < this.height; j++) {
-                        this.board[i][j] = Board.empty;
+                        this.board[i][j] = CrossWord.empty;
                     }
                 }
             }
@@ -57,7 +79,7 @@
                 let width = rows[0].length;
                 let height = rows.length;
 
-                let board = new Board(width, height);
+                let board = new CrossWord(width, height, []);
 
                 for (let i = 0; i < width; i++) {
                     for (let j = 0; j < height; j++) {
@@ -81,7 +103,7 @@
                         let x = i * size;
                         let y = j * size;
 
-                        if (letter == Board.empty) {
+                        if (letter == CrossWord.empty) {
                             let d = size / 5;
                             ctx.fillRect(x + d, y + d, size - d * 2, size - d * 2);
                         } else {
@@ -100,11 +122,9 @@
                     for (var j = 0; j < this.height; j++) {
                         let letter = this.board[i][j];
 
-                        if (letter == Board.empty) {
+                        if (letter == CrossWord.empty) {
                             if (word.length > 1) {
-                                words.push({
-                                    i, j, word,
-                                })
+                                words.push(word);
                             }
                             word = "";
                         } else {
@@ -112,9 +132,7 @@
                         }
                     }
                     if (word.length > 1) {
-                        words.push({
-                            i, j, word,
-                        })
+                        words.push(word);
                     }
                 }
 
@@ -122,11 +140,9 @@
                     let word = "";
                     for (var i = 0; i < this.width; i++) {
                         let letter = this.board[i][j];
-                        if (letter == Board.empty) {
+                        if (letter == CrossWord.empty) {
                             if (word.length > 1) {
-                                words.push({
-                                    i, j, word,
-                                })
+                                words.push(word);
                             }
                             word = "";
                         } else {
@@ -134,9 +150,7 @@
                         }
                     }
                     if (word.length > 1) {
-                        words.push({
-                            i, j, word,
-                        })
+                        words.push(word);
                     }
                 }
 
@@ -146,7 +160,7 @@
             is_valid() {
                 let words = this.get_words();
                 for (let word of words) {
-                    if (!dictionary.includes(word.word)) {
+                    if (!this.dictionary.includes(word)) {
                         return false;
                     }
                 }
@@ -222,7 +236,7 @@
                         for (let k = 0; k < word.length; k++) {
                             let board_letter = this.board[i + k][j];
                             let word_letter = word[k];
-                            if (board_letter != Board.empty && board_letter != word_letter) {
+                            if (board_letter != CrossWord.empty && board_letter != word_letter) {
                                 is_valid_move = false;
                                 break;
                             }
@@ -246,7 +260,7 @@
                         for (let k = 0; k < word.length; k++) {
                             let board_letter = this.board[i][j + k];
                             let word_letter = word[k];
-                            if (board_letter != Board.empty && board_letter != word_letter) {
+                            if (board_letter != CrossWord.empty && board_letter != word_letter) {
                                 is_valid_move = false;
                                 break;
                             }
@@ -277,6 +291,7 @@
 
                 let word = words[0];
                 let moves = this.gen_moves_word(word);
+                moves = moves.sort(() => Math.random() < 0.5);
 
                 for (let move of moves) {
                     move.do_move();
@@ -287,12 +302,51 @@
                     move.undo_move();
                 }
 
+                // TODO: throw away word and continue to certain depth with dict
+
                 console.log("Hallo!", word, words.length);
                 return false;
             }
+
+            build_puzzle(max_depth) {
+                return this._build_puzzle(this.dictionary, 0, max_depth);
+            }
+
+            _build_puzzle(words, depth, max_depth) {
+                if (!this.is_valid()) {
+                    return false;
+                }
+
+                if (words.length == 0) {
+                    return true;
+                }
+
+                if (depth > max_depth) {
+                    return true;
+                }
+
+
+                while (words.length > 0) {
+                    let word = words[0];
+                    let moves = this.gen_moves_word(word);
+                    moves = moves.sort(() => Math.random() < 0.5);
+
+                    for (let move of moves) {
+                        move.do_move();
+                        let rec_success = this._build_puzzle(words.slice(1), depth + 1, max_depth);
+                        if (rec_success) {
+                            return true;
+                        }
+                        move.undo_move();
+                    }
+
+                    // throw away word and continue to certain depth with dict
+                    words = words.slice(1);
+                }
+
+                return false;
+            }
         }
-        board = new Board(20, 10);
-        board.render(canvas, 50);
     </script>
 </body>
 
