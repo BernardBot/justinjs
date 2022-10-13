@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <canvas></canvas>
+    <script>
+        canvas = document.querySelector("canvas");
+        ctx = canvas.getContext("2d");
+
+        width = 10;
+        height = 10;
+        size = 50;
+
+        words = [
+            "kaas",
+            "ham",
+            "leverworst",
+            "roos",
+        ]
+
+        test = 
+        "__p___modieus_" +
+        "__e__me_iel_te" +
+        "__s__onverkort" +
+        "_relatie_s_pen" +
+        "beteuterd_lena" +
+        "__a__omlyning_" +
+        "_______aken___" +
+        "_______g_kiwi_" +
+        "_______i__e___" +
+        "_______n______" +
+        "_______g______"
+
+        class Board {
+            static empty = "_";
+
+            constructor(width, height) {
+                this.width = width;
+                this.height = height;
+                this.board = [];
+                for (let i = 0; i < width; i++) {
+                    this.board[i] = [];
+                    for (let j = 0; j < height; j++) {
+                        this.board[i][j] = Board.empty;
+                    }
+                }
+            }
+
+            render(canvas, size) {
+                let ctx = canvas.getContext("2d");
+
+                canvas.width = this.width * size;
+                canvas.height = this.height * size;
+                ctx.font = size + "px Arial";
+
+                for (let i = 0; i < this.width; i++) {
+                    for (let j = 0; j < this.height; j++) {
+                        let x = i * size;
+                        let y = j * size;
+                        let letter = this.board[i][j];
+
+                        ctx.strokeRect(x, y, size, size);
+
+                        if (letter != Board.empty) {
+                            ctx.fillText(letter, x, y + size)
+                        }
+                    }
+                }
+            }
+
+            put_word_h(word, i, j) {
+                for (let letter of word) {
+                    if (i >= this.width) {
+                        break;
+                    }
+                    this.board[i][j] = letter;
+                    i++;
+                }
+            }
+
+            put_word_v(word, i, j) {
+                for (let letter of word) {
+                    if (j >= this.height) {
+                        break;
+                    }
+                    this.board[i][j] = letter;
+                    j++;
+                }
+            }
+
+            get_word_h(length, i, j) {
+                let word = "";
+                for (let k = 0; k < length; k++) {
+                    if (i + k >= this.width) {
+                        break;
+                    }
+                    let letter = this.board[i + k][j];
+                    word += letter;
+                }
+                return word;
+            }
+
+            get_word_v(length, i, j) {
+                let word = "";
+                for (let k = 0; k < length; k++) {
+                    if (j + k >= this.height) {
+                        break;
+                    }
+                    let letter = this.board[i][j + k];
+                    word += letter;
+                }
+                return word;
+            }
+
+            is_valid() {
+                let valid_h = this.is_valid_h();
+                let valid_v = this.is_valid_v();
+                return valid_h && valid_v;
+            }
+
+            is_valid_h() {
+                for (let j = 0; j < this.height; j++) {
+                    let word = "";
+                    for (let i = 0; i < this.width; i++) {
+                        let letter = this.board[i][j];
+                        if (letter == Board.empty) {
+                            if (!this.is_valid_word(word)) {
+                                return false;
+                            }
+                            word = "";
+                        } else {
+                            word += letter;
+                        }
+                    }
+
+                    if (!this.is_valid_word(word)) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            is_valid_v() {
+                for (let i = 0; i < this.width; i++) {
+                    let word = "";
+                    for (let j = 0; j < this.height; j++) {
+                        let letter = this.board[i][j];
+                        if (letter == Board.empty) {
+                            if (!this.is_valid_word(word)) {
+                                return false;
+                            }
+                            word = "";
+                        } else {
+                            word += letter;
+                        }
+                    }
+                    
+                    if (!this.is_valid_word(word)) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            is_valid_word(word) {
+                if (word.length < 2) {
+                    return true;
+                }
+                return words.includes(word);
+            }
+
+            place_word_h(word) {
+                for (let j = 0; j < this.height; j++) {
+                    for (let i = 0; i < this.width; i++) {
+                        let oldword = this.get_word_h(word.length, i, j);
+                        // do NOT overwrite valid word
+                        let trimmed = this.trim_empty(oldword);
+                        if (this.is_valid_word(trimmed) && trimmed != "") {
+                            continue;
+                        }
+                        this.put_word_h(word, i, j);
+                        if (this.is_valid()) {
+                            return true;
+                        } else {
+                            this.put_word_h(oldword, i, j);
+                        }
+                    }
+                }
+                return false;
+            }
+
+            
+            place_word_v(word) {
+                for (let i = 0; i < this.width; i++) {
+                    for (let j = 0; j < this.height; j++) {
+                        let oldword = this.get_word_v(word.length, i, j);
+                        // do NOT overwrite valid word
+                        let trimmed = this.trim_empty(oldword);
+                        if (this.is_valid_word(trimmed) && trimmed != "") {
+                            continue;
+                        }
+                        this.put_word_v(word, i, j);
+                        if (this.is_valid()) {
+                            return true;
+                        } else {
+                            this.put_word_v(oldword, i, j);
+                        }
+                    }
+                }
+                return false;
+            }
+            
+            trim_empty(word) {
+                let i = 0;
+                while (i < word.length && word[i] == Board.empty) {
+                    i++;
+                }
+
+                let j = word.length - 1;
+                while (j > -1 && word[j] == Board.empty) {
+                    j--;
+                }
+
+                return word.slice(i, j + 1);
+            }
+            
+            place_words(words) {
+                let horizontal = true;
+                let result;
+                for (let word of words) {
+                    if (horizontal) {
+                        result = this.place_word_h(word);
+                    } else {
+                        result = this.place_word_v(word);
+                    }
+                    if (!result) {
+                        return false;
+                    }
+                    horizontal = !horizontal;
+                }
+                return true;
+            }
+        }
+        board = new Board(width, height);
+    </script>
+</body>
+
+</html>
