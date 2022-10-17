@@ -11,26 +11,6 @@
 <body>
     <canvas></canvas>
     <script>
-        canvas = document.querySelector("canvas");
-        ctx = canvas.getContext("2d");
-
-        width = 10;
-        height = 15;
-        size = 50;
-
-        const test_crossword =
-            "__p___modieus_\n" +
-            "__e__mi_iel_te\n" +
-            "__s__onverkort\n" +
-            "_relatie_s_pen\n" +
-            "beteuterd_lena\n" +
-            "__a__omlyning_\n" +
-            "_______aken___\n" +
-            "_______g_kiwi_\n" +
-            "_______i__e___\n" +
-            "_______n______\n" +
-            "_______g______"
-
         async function word_db(n) {
             let response = await fetch("https://raw.githubusercontent.com/OpenTaal/opentaal-wordlist/master/wordlist.txt");
             let text = await response.text();
@@ -39,38 +19,28 @@
             return shuffled.slice(0, n);
         }
 
-        window.onload = function () {
-            word_db(10000).then(words => {
-                default_dictionary = words;
-                board = new CrossWord(40, 20);
-                board.build_puzzle(150);
-                board.render(canvas, 50);
-            })
-        }
+        window.onload = async function () {
+            wdb = await word_db(10000);
 
-        const test_dictionary = ["mam", "motto", "miniem", "verlaging", "die", "dyk", "iers", "nek", "elk", "linie", "open", "streng", "etna", "modieus", "me", "iel", "onverkort", "relatie", "pen", "beteuterd", "lena", "omlyning", "aken", "kiwi"];
+            canvas = document.querySelector("canvas");
+            cw = CrossWord.from_string(
+                "....."
+            );
+            cw.render(canvas, 50);
+        };
 
         class CrossWord {
-            static empty = "_";
+            static EMPTY = ".";
+            static OFFSIDE = "_";
 
-            constructor(width, height, dictionary) {
+            constructor(width, height, board) {
                 this.width = width;
                 this.height = height;
-                if (dictionary == undefined) {
-                    dictionary = default_dictionary;
-                }
-                this.dictionary = dictionary;
-                this.clear_board();
+                this.board = board;
             }
 
-            clear_board() {
-                this.board = [];
-                for (let i = 0; i < this.width; i++) {
-                    this.board[i] = [];
-                    for (let j = 0; j < this.height; j++) {
-                        this.board[i][j] = CrossWord.empty;
-                    }
-                }
+            static empty(width, height) {
+                return new CrossWord(width, height, new Array(width * height).fill(CrossWord.EMPTY))
             }
 
             static from_string(string) {
@@ -79,200 +49,132 @@
                 let width = rows[0].length;
                 let height = rows.length;
 
-                let board = new CrossWord(width, height, []);
+                let board = [];
 
                 for (let i = 0; i < width; i++) {
                     for (let j = 0; j < height; j++) {
-                        board.board[i][j] = rows[j][i];
+                        let k = i + j * width;
+                        board[k] = rows[j][i];
                     }
                 }
-                return board;
+
+                return new CrossWord(width, height, board);
             }
 
             render(canvas, size) {
-                let ctx = canvas.getContext("2d");
-
                 canvas.width = this.width * size;
                 canvas.height = this.height * size;
-                ctx.font = size / 1.5 + "px Arial";
 
+                let ctx = canvas.getContext("2d");
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
+
                 for (let i = 0; i < this.width; i++) {
                     for (let j = 0; j < this.height; j++) {
-                        let letter = this.board[i][j];
                         let x = i * size;
                         let y = j * size;
 
-                        if (letter == CrossWord.empty) {
+                        let k = i + j * this.width;
+                        let letter = this.board[k];
+
+                        ctx.strokeRect(x, y, size, size);
+
+                        if (letter == CrossWord.EMPTY) {
+                            // do nothing...
+                        } else if (letter == CrossWord.OFFSIDE) {
                             let d = size / 5;
                             ctx.fillRect(x + d, y + d, size - d * 2, size - d * 2);
                         } else {
+                            // assume its a letter...
+                            ctx.font = size / 1.5 + "px Arial";
                             ctx.fillText(letter.toUpperCase(), x + size / 4, y + size / 1.4);
                         }
-                        ctx.strokeRect(x, y, size, size);
                     }
                 }
             }
 
-            get_words() {
-                let words = [];
-
-                for (var i = 0; i < this.width; i++) {
-                    let word = "";
-                    for (var j = 0; j < this.height; j++) {
-                        let letter = this.board[i][j];
-
-                        if (letter == CrossWord.empty) {
-                            if (word.length > 1) {
-                                words.push(word);
-                            }
-                            word = "";
-                        } else {
-                            word += letter;
-                        }
-                    }
-                    if (word.length > 1) {
-                        words.push(word);
-                    }
+            _puth(k, word) {
+                for (let i = 0; i < word.length; i++) {
+                    this.board[k + i] = word[i];
                 }
-
-                for (var j = 0; j < this.height; j++) {
-                    let word = "";
-                    for (var i = 0; i < this.width; i++) {
-                        let letter = this.board[i][j];
-                        if (letter == CrossWord.empty) {
-                            if (word.length > 1) {
-                                words.push(word);
-                            }
-                            word = "";
-                        } else {
-                            word += letter;
-                        }
-                    }
-                    if (word.length > 1) {
-                        words.push(word);
-                    }
-                }
-
-                return words;
             }
 
-            is_valid() {
-                let words = this.get_words();
-                for (let word of words) {
-                    if (!this.dictionary.includes(word)) {
-                        return false;
-                    }
+            _putv(k, word) {
+                for (let i = 0; i < word.length; i++) {
+                    this.board[k + i * this.width] = word[i];
                 }
-                return true;
             }
 
-            in_bounds(i, j) {
-                return 0 <= i && i < this.width && 0 <= j && j < this.height;
-            }
-
-            put_letter(letter, i, j) {
-                if (this.in_bounds(i, j)) {
-                    this.board[i][j] = letter;
-                    return true;
-                }
-                return false;
-            }
-
-            get_letter(i, j) {
-                if (this.in_bounds(i, j)) {
-                    return this.board[i][j];
-                }
-                return "";
-            }
-
-            put_word_h(word, i, j) {
-                for (let letter of word) {
-                    if (this.put_letter(letter, i, j)) {
-                        i++;
-                    } else {
-                        return false;
-                    }
-                }
-                return true;
-            }
-
-            put_word_v(word, i, j) {
-                for (let letter of word) {
-                    if (this.put_letter(letter, i, j)) {
-                        j++;
-                    } else {
-                        return false;
-                    }
-                }
-                return true;
-            }
-
-            get_word_h(length, i, j) {
+            _geth(k, length) {
                 let word = "";
-                for (let k = 0; k < length; k++) {
-                    let letter = this.get_letter(i + k, j);
-                    word += letter;
+                for (let i = 0; i < length; i++) {
+                    word += this.board[k + i];
                 }
                 return word;
             }
 
-            get_word_v(length, i, j) {
+            _getv(k, length) {
                 let word = "";
-                for (let k = 0; k < length; k++) {
-                    let letter = this.get_letter(i, j + k);
-                    word += letter;
+                for (let i = 0; i < length; i++) {
+                    word += this.board[k + i * this.width];
                 }
                 return word;
             }
 
-            gen_moves_word(word) {
+            gen_moves() {
                 let moves = [];
 
-                for (let i = 0; i < this.width - word.length + 1; i++) {
+                // vertical moves
+                for (let i = 0; i < this.width; i++) {
+                    let word = "";
                     for (let j = 0; j < this.height; j++) {
-                        let is_valid_move = true;
-                        let old_word = "";
-                        for (let k = 0; k < word.length; k++) {
-                            let board_letter = this.board[i + k][j];
-                            let word_letter = word[k];
-                            if (board_letter != CrossWord.empty && board_letter != word_letter) {
-                                is_valid_move = false;
-                                break;
-                            }
-                            old_word += board_letter;
+                        let k = i + j * this.width;
+                        let letter = this.board[k];
+
+                        if (letter != CrossWord.OFFSIDE) {
+                            word += letter;
                         }
 
-                        if (is_valid_move) {
-                            moves.push({
-                                i, j, old_word,
-                                do_move: () => this.put_word_h(word, i, j),
-                                undo_move: () => this.put_word_h(old_word, i, j),
-                            });
+                        if (letter == CrossWord.OFFSIDE || j == this.height - 1) {
+                            if (word.length > 1) {
+                                let h = k - word.length * this.width + this.width
+                                let length = word.length;
+                                let self = this;
+                                moves.push({
+                                    k: h,
+                                    length: length,
+                                    get: () => self._getv(h, length),
+                                    put: word => self._putv(h, word),
+                                });
+                            }
+                            word = "";
                         }
                     }
                 }
 
-                for (let i = 0; i < this.width; i++) {
-                    for (let j = 0; j < this.height - word.length + 1; j++) {
-                        let is_valid_move = true;
-                        let old_word = "";
-                        for (let k = 0; k < word.length; k++) {
-                            let board_letter = this.board[i][j + k];
-                            let word_letter = word[k];
-                            if (board_letter != CrossWord.empty && board_letter != word_letter) {
-                                is_valid_move = false;
-                                break;
-                            }
-                            old_word += board_letter;
+                // horizontal moves
+                for (let j = 0; j < this.height; j++) {
+                    let word = "";
+                    for (let i = 0; i < this.width; i++) {
+                        let k = i + j * this.width;
+                        let letter = this.board[k];
+
+                        if (letter != CrossWord.OFFSIDE) {
+                            word += letter;
                         }
 
-                        if (is_valid_move) {
-                            moves.push({
-                                i, j, old_word,
-                                do_move: () => this.put_word_v(word, i, j),
-                                undo_move: () => this.put_word_v(old_word, i, j),
-                            });
+                        if (letter == CrossWord.OFFSIDE || i == this.width - 1) {
+                            if (word.length > 1) {
+                                let h = k - word.length + 1;
+                                let length = word.length;
+                                let self = this;
+                                moves.push({
+                                    k: h,
+                                    length: length,
+                                    get: () => self._geth(h, length),
+                                    put: word => self._puth(h, word),
+                                });
+                            }
+                            word = "";
                         }
                     }
                 }
@@ -280,70 +182,34 @@
                 return moves;
             }
 
-            place_words(words) {
-                if (!this.is_valid()) {
-                    return false;
-                }
-
-                if (words.length == 0) {
-                    return true;
-                }
-
-                let word = words[0];
-                let moves = this.gen_moves_word(word);
-                moves = moves.sort(() => Math.random() < 0.5);
-
-                for (let move of moves) {
-                    move.do_move();
-                    let rec_success = this.place_words(words.slice(1));
-                    if (rec_success) {
-                        return true;
-                    }
-                    move.undo_move();
-                }
-
-                // TODO: throw away word and continue to certain depth with dict
-
-                console.log("Hallo!", word, words.length);
-                return false;
+            solve(dictionary) {
+                this.dictionary = dictionary;
+                let moves = this.gen_moves();
+                return this._solve(moves);
             }
 
-            build_puzzle(max_depth) {
-                return this._build_puzzle(this.dictionary, 0, max_depth);
-            }
-
-            _build_puzzle(words, depth, max_depth) {
-                if (!this.is_valid()) {
-                    return false;
-                }
-
-                if (words.length == 0) {
+            _solve(moves) {
+                if (moves.length == 0) {
                     return true;
                 }
 
-                if (depth > max_depth) {
-                    return true;
-                }
-
-
-                while (words.length > 0) {
-                    let word = words[0];
-                    let moves = this.gen_moves_word(word);
-                    moves = moves.sort(() => Math.random() < 0.5);
-
-                    for (let move of moves) {
-                        move.do_move();
-                        let rec_success = this._build_puzzle(words.slice(1), depth + 1, max_depth);
-                        if (rec_success) {
+                let move = moves[0];
+                let board_word = move.get();
+                let regex = new RegExp("^" + board_word + "$");
+                // get the symbols at word position
+                for (let dict_word of this.dictionary) {
+                    // check if word matches regex of word on board
+                    if (regex.test(dict_word)) {
+                        move.put(dict_word);
+                        // if so recur
+                        if (this._solve(moves.slice(1))) {
                             return true;
                         }
-                        move.undo_move();
                     }
-
-                    // throw away word and continue to certain depth with dict
-                    words = words.slice(1);
                 }
-
+                // restore board
+                move.put(board_word);
+                // no word in the dictionary fit
                 return false;
             }
         }
