@@ -11,21 +11,51 @@
 <body>
     <canvas></canvas>
     <script>
-        async function word_db(n) {
+        async function word_db(n, max_length = 10) {
             let response = await fetch("https://raw.githubusercontent.com/OpenTaal/opentaal-wordlist/master/wordlist.txt");
             let text = await response.text();
             let words = text.split("\n");
-            let shuffled = words.map(w => w.toLocaleLowerCase()).filter(x => x.length < 6).sort(() => Math.random() < 0.5);
-            return shuffled.slice(0, n);
+            return words;
+        }
+
+        function shuffle(arr) {
+            return arr.sort(() => Math.random() < 0.5);
         }
 
         window.onload = async function () {
-            wdb = await word_db(10000);
+            wdb = await word_db();
+
+            max_length = 8;
+            dict_size = 50000;
+            wdb = wdb
+                .filter(word => word.length <= max_length && word.match(/^[a-z]+$/))
+                .sort(() => Math.random() < 0.5)
+                .map(word => word.toUpperCase())
+                .slice(0, dict_size);
+
+            simple_board_string =
+                ".......\n" +
+                ".___._.\n" +
+                "._._...\n" +
+                "._._._.\n" +
+                ".....__"
+
+            denksport_board_string =
+                "_....._...._.....\n" +
+                "..._....._....._.\n" +
+                "......._....._...\n" +
+                "._..._....._.....\n" +
+                ".._._._..._..._._\n" +
+                "........_........\n" +
+                "_._..._..._._._..\n" +
+                "....._....._..._.\n" +
+                "..._....._.......\n" +
+                "._....._....._...\n" +
+                "....._...._....._"
+
+            cw = CrossWord.from_string(denksport_board_string);
 
             canvas = document.querySelector("canvas");
-            cw = CrossWord.from_string(
-                "....."
-            );
             cw.render(canvas, 50);
         };
 
@@ -37,6 +67,12 @@
                 this.width = width;
                 this.height = height;
                 this.board = board;
+                this._moves = this.gen_moves();
+
+                // TODO: add dict and secondary dict (thats the one with dots)
+                this.dict = new Set();
+                this.good_words = new Set();
+                this.bad_words = new Set();
             }
 
             static empty(width, height) {
@@ -59,6 +95,14 @@
                 }
 
                 return new CrossWord(width, height, board);
+            }
+
+            clear() {
+                for (let i = 0; i < this.board.length; i++) {
+                    if (this.board[i] != CrossWord.OFFSIDE) {
+                        this.board[i] = CrossWord.EMPTY;
+                    }
+                }
             }
 
             render(canvas, size) {
@@ -136,7 +180,7 @@
 
                         if (letter == CrossWord.OFFSIDE || j == this.height - 1) {
                             if (word.length > 1) {
-                                let h = k - word.length * this.width + this.width
+                                let h = k - word.length * this.width + this.width * (letter != CrossWord.OFFSIDE);
                                 let length = word.length;
                                 let self = this;
                                 moves.push({
@@ -164,7 +208,7 @@
 
                         if (letter == CrossWord.OFFSIDE || i == this.width - 1) {
                             if (word.length > 1) {
-                                let h = k - word.length + 1;
+                                let h = k - word.length + (letter != CrossWord.OFFSIDE);
                                 let length = word.length;
                                 let self = this;
                                 moves.push({
@@ -182,33 +226,109 @@
                 return moves;
             }
 
-            solve(dictionary) {
-                this.dictionary = dictionary;
-                let moves = this.gen_moves();
-                return this._solve(moves);
+            get_words() {
+                return this._moves.map(move => move.get());
             }
 
-            _solve(moves) {
-                if (moves.length == 0) {
+            is_valid() {
+                for (let word of this.get_words()) {
+                    if (this.good_words.has(word)) {
+                        continue;
+                    }
+
+                    if (this.bad_words.has(word)) {
+                        return false;
+                    }
+
+                    let regexp = new RegExp("^" + word + "$");
+
+                    let found = false;
+                    for (let dict_word of this.dict) {
+                        if (regexp.test(dict_word)) {
+                            this.good_words.add(word); // should be object we can look up stuff?
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (!found) {
+                        this.bad_words.add(word);
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            solve(dict) {
+                this.dict = new Set(dict.slice());
+                this.good_words = new Set();
+                this.bad_words = new Set();
+
+                this.count = 0;
+                
+                this._solve_moves = this.gen_moves();
+                this._solve_moves = shuffle(this._solve_moves);
+
+                let t = Date.now();
+
+                console.log("Starting solver...");
+
+                let result = this._solve(0);
+
+                let dt = Date.now() - t;
+
+                console.log(this.bad_words);
+                console.log(this.good_words);
+                console.log("Time taken", dt);
+                console.log("Count", this.count);
+                console.log("Ratio:", this.count / dt);
+                console.log(result ? "Found solution" : "FAILED to find solution");
+            }
+
+            _solve(move_index) {
+                if (this.count > 1e7) {
+                    console.log(this._solve_moves.slice(move_index));
                     return true;
                 }
 
-                let move = moves[0];
+                if (!this.is_valid()) {
+                    return false;
+                }
+
+                if (move_index >= this._solve_moves.length) {
+                    return true;
+                }
+
+                let move = this._solve_moves[move_index];
                 let board_word = move.get();
                 let regex = new RegExp("^" + board_word + "$");
+
+                // console.log(move, board_word, this.bad_words);
+                if (this.bad_words.has(board_word)) {
+                    return false;
+                }
+
+                let found = false;
                 // get the symbols at word position
-                for (let dict_word of this.dictionary) {
+                for (let dict_word of this.dict) {
                     // check if word matches regex of word on board
+                    this.count++;
                     if (regex.test(dict_word)) {
+                        found = true;
                         move.put(dict_word);
+                        // this.dictionary.delete(dict_word);
                         // if so recur
-                        if (this._solve(moves.slice(1))) {
+                        if (this._solve(move_index + 1)) {
                             return true;
                         }
+                        // this.dictionary.add(dict_word);
+                        // console.log(move, board_word, this.bad_words, dict_word);
                     }
                 }
                 // restore board
                 move.put(board_word);
+
                 // no word in the dictionary fit
                 return false;
             }
