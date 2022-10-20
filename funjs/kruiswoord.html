@@ -54,6 +54,7 @@
                 "....._...._....._"
 
             cw = CrossWord.from_string(denksport_board_string);
+            cw.set_dict(wdb);
 
             canvas = document.querySelector("canvas");
             cw.render(canvas, 50);
@@ -62,21 +63,22 @@
         class CrossWord {
             static EMPTY = ".";
             static OFFSIDE = "_";
+            static MAX_TRIES = 1e7;
 
-            constructor(width, height, board) {
+            constructor(width, height, board, dict) {
                 this.width = width;
                 this.height = height;
                 this.board = board;
                 this._moves = this.gen_moves();
 
                 // TODO: add dict and secondary dict (thats the one with dots)
-                this.dict = new Set();
+                this.dict = dict;
                 this.good_words = new Set();
                 this.bad_words = new Set();
             }
 
             static empty(width, height) {
-                return new CrossWord(width, height, new Array(width * height).fill(CrossWord.EMPTY))
+                return new CrossWord(width, height, new Array(width * height).fill(CrossWord.EMPTY), []);
             }
 
             static from_string(string) {
@@ -94,7 +96,11 @@
                     }
                 }
 
-                return new CrossWord(width, height, board);
+                return new CrossWord(width, height, board, []);
+            }
+
+            set_dict(dict) {
+                this.dict = dict;
             }
 
             clear() {
@@ -136,90 +142,90 @@
                 }
             }
 
-            _puth(k, word) {
-                for (let i = 0; i < word.length; i++) {
-                    this.board[k + i] = word[i];
+            put(indices, word) {
+                for (let i = 0; i < indices.length; i++) {
+                    this.board[indices[i]] = word[i];
                 }
             }
 
-            _putv(k, word) {
-                for (let i = 0; i < word.length; i++) {
-                    this.board[k + i * this.width] = word[i];
-                }
-            }
-
-            _geth(k, length) {
+            get(indices) {
                 let word = "";
-                for (let i = 0; i < length; i++) {
-                    word += this.board[k + i];
-                }
-                return word;
-            }
-
-            _getv(k, length) {
-                let word = "";
-                for (let i = 0; i < length; i++) {
-                    word += this.board[k + i * this.width];
+                for (let index of indices) {
+                    word += this.board[index];
                 }
                 return word;
             }
 
             gen_moves() {
+                // ugh, JS scoping...
+                let self = this;
+
                 let moves = [];
+                let crosses = {};
+                for (let i = 0; i < this.board.length; i++) {
+                    crosses[i] = new Set();
+                }
 
-                // vertical moves
-                for (let i = 0; i < this.width; i++) {
-                    let word = "";
-                    for (let j = 0; j < this.height; j++) {
-                        let k = i + j * this.width;
-                        let letter = this.board[k];
+                function push_indices(indices) {
+                    if (indices.length > 1) {
+                        let length = indices.length;
+                        let start_index = indices[0];
 
-                        if (letter != CrossWord.OFFSIDE) {
-                            word += letter;
-                        }
+                        // TODO: make move class
+                        let move = {
+                            start_index: start_index,
+                            indices: indices,
+                            length: length,
+                            crosses: new Set(),
+                            get: () => self.get(indices),
+                            put: word => self.put(indices, word),
+                        };
 
-                        if (letter == CrossWord.OFFSIDE || j == this.height - 1) {
-                            if (word.length > 1) {
-                                let h = k - word.length * this.width + this.width * (letter != CrossWord.OFFSIDE);
-                                let length = word.length;
-                                let self = this;
-                                moves.push({
-                                    k: h,
-                                    length: length,
-                                    get: () => self._getv(h, length),
-                                    put: word => self._putv(h, word),
-                                });
-                            }
-                            word = "";
+                        moves.push(move);
+
+                        for (let index of indices) {
+                            crosses[index].add(move);
                         }
                     }
                 }
 
+                // vertical moves
+                for (let i = 0; i < this.width; i++) {
+                    let indices = [];
+                    for (let j = 0; j < this.height; j++) {
+                        let index = i + j * this.width;
+                        if (this.board[index] == CrossWord.OFFSIDE) {
+                            push_indices(indices);
+                            indices = [];
+                        } else {
+                            indices.push(index);
+                        }
+                    }
+                    push_indices(indices);
+                }
+
                 // horizontal moves
                 for (let j = 0; j < this.height; j++) {
-                    let word = "";
+                    let indices = [];
                     for (let i = 0; i < this.width; i++) {
-                        let k = i + j * this.width;
-                        let letter = this.board[k];
-
-                        if (letter != CrossWord.OFFSIDE) {
-                            word += letter;
+                        let index = i + j * this.width;
+                        if (this.board[index] == CrossWord.OFFSIDE) {
+                            push_indices(indices);
+                            indices = [];
+                        } else {
+                            indices.push(index);
                         }
+                    }
+                    push_indices(indices);
+                }
 
-                        if (letter == CrossWord.OFFSIDE || i == this.width - 1) {
-                            if (word.length > 1) {
-                                let h = k - word.length + (letter != CrossWord.OFFSIDE);
-                                let length = word.length;
-                                let self = this;
-                                moves.push({
-                                    k: h,
-                                    length: length,
-                                    get: () => self._geth(h, length),
-                                    put: word => self._puth(h, word),
-                                });
-                            }
-                            word = "";
+                for (let index in crosses) {
+                    let cross_moves = crosses[index];
+                    for (let m1 of cross_moves) {
+                        for (let m2 of cross_moves) {
+                            m1.crosses.add(m2);
                         }
+                        m1.crosses.delete(m1); // remove yourself? -> maybe leave it
                     }
                 }
 
@@ -230,46 +236,53 @@
                 return this._moves.map(move => move.get());
             }
 
-            is_valid() {
-                for (let word of this.get_words()) {
-                    if (this.good_words.has(word)) {
-                        continue;
-                    }
+            is_re_in_dict(word) {
+                if (this.good_words.has(word)) {
+                    return true;
+                }
 
-                    if (this.bad_words.has(word)) {
-                        return false;
-                    }
+                if (this.bad_words.has(word)) {
+                    return false;
+                }
 
-                    let regexp = new RegExp("^" + word + "$");
+                let regexp = new RegExp("^" + word + "$");
 
-                    let found = false;
-                    for (let dict_word of this.dict) {
-                        if (regexp.test(dict_word)) {
-                            this.good_words.add(word); // should be object we can look up stuff?
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    if (!found) {
-                        this.bad_words.add(word);
-                        return false;
+                for (let dict_word of this.dict) {
+                    if (regexp.test(dict_word)) {
+                        this.good_words.add(word);
+                        return true;
                     }
                 }
 
+                this.bad_words.add(word);
+                return false;
+            }
+
+            is_valid() {
+                for (let word of this.get_words()) {
+                    if (!this.is_re_in_dict(word)) {
+                        return false;
+                    }
+                }
                 return true;
             }
 
-            solve(dict) {
-                this.dict = new Set(dict.slice());
-                this.good_words = new Set();
-                this.bad_words = new Set();
+            is_valid_move(move) {
+                for (let cross of move.crosses) {
+                    if (!this.is_re_in_dict(cross.get())) {
+                        return false;
+                    }
+                }
+                return true;
+            }
 
+            solve(max_tries = CrossWord.MAX_TRIES) {
+                // try a different approach
+                this.dict = shuffle(this.dict);
                 this.count = 0;
-                
-                this._solve_moves = this.gen_moves();
-                this._solve_moves = shuffle(this._solve_moves);
+                this.MAX_TRIES = max_tries;
 
+                // TODO: debugging flag?
                 let t = Date.now();
 
                 console.log("Starting solver...");
@@ -278,8 +291,8 @@
 
                 let dt = Date.now() - t;
 
-                console.log(this.bad_words);
-                console.log(this.good_words);
+                console.log("BAD", this.bad_words);
+                console.log("GOOD", this.good_words);
                 console.log("Time taken", dt);
                 console.log("Count", this.count);
                 console.log("Ratio:", this.count / dt);
@@ -287,37 +300,30 @@
             }
 
             _solve(move_index) {
-                if (this.count > 1e7) {
-                    console.log(this._solve_moves.slice(move_index));
+                if (this.count > this.MAX_TRIES) {
                     return true;
                 }
 
-                if (!this.is_valid()) {
-                    return false;
-                }
-
-                if (move_index >= this._solve_moves.length) {
+                if (move_index >= this._moves.length) {
                     return true;
                 }
 
-                let move = this._solve_moves[move_index];
+                // TODO: clean this up
+                let move = this._moves[move_index];
                 let board_word = move.get();
                 let regex = new RegExp("^" + board_word + "$");
 
-                // console.log(move, board_word, this.bad_words);
-                if (this.bad_words.has(board_word)) {
-                    return false;
-                }
-
-                let found = false;
                 // get the symbols at word position
                 for (let dict_word of this.dict) {
                     // check if word matches regex of word on board
                     this.count++;
                     if (regex.test(dict_word)) {
-                        found = true;
                         move.put(dict_word);
-                        // this.dictionary.delete(dict_word);
+
+                        if (!this.is_valid_move(move)) {
+                            continue;
+                        }
+                        // this.dictionary.delete(dit_word);
                         // if so recur
                         if (this._solve(move_index + 1)) {
                             return true;
