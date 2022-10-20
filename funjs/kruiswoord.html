@@ -10,6 +10,9 @@
 
 <body>
     <canvas></canvas>
+    <div>
+        <button>Make a puzzle</button>
+    </div>
     <script>
         async function word_db(n, max_length = 10) {
             let response = await fetch("https://raw.githubusercontent.com/OpenTaal/opentaal-wordlist/master/wordlist.txt");
@@ -56,8 +59,16 @@
             cw = CrossWord.from_string(denksport_board_string);
             cw.set_dict(wdb);
 
+            size = 30;
             canvas = document.querySelector("canvas");
-            cw.render(canvas, 50);
+            cw.render(canvas, size);
+
+            button = document.querySelector("button");
+            button.onclick = function() {
+                cw.clear();
+                cw.solve();
+                cw.render(canvas, size);
+            }
         };
 
         class CrossWord {
@@ -309,6 +320,8 @@
                 }
 
                 // TODO: clean this up
+                // use class methods
+                // delete redundant words?
                 let move = this._moves[move_index];
                 let board_word = move.get();
                 let regex = new RegExp("^" + board_word + "$");
@@ -329,7 +342,6 @@
                             return true;
                         }
                         // this.dictionary.add(dict_word);
-                        // console.log(move, board_word, this.bad_words, dict_word);
                     }
                 }
                 // restore board
