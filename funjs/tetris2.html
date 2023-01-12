@@ -1,0 +1,183 @@
+<canvas></canvas>
+<script>
+    canvas = document.querySelector("canvas");
+    ctx = canvas.getContext("2d");
+    canvas.style.border = "1px solid black";
+
+    WIDTH = 10;
+    HEIGHT = 20;
+
+    SIZE = 25;
+
+    canvas.width = WIDTH * SIZE;
+    canvas.height = HEIGHT * SIZE;
+
+    N = -WIDTH;
+    E = 1;
+    W = -1;
+    S = WIDTH;
+
+    blocks = [
+        [[0, E, E+E, E+E+E], [0, S, S+S, S+S+S]],
+        [[0, E, E+E, E+S], [E+E, E+E+S, E+E+S+S, E+S], [S, E, E+S, E+E+S], [0, S, S+S, S+E]],
+    ];
+
+    for (let block of blocks) {
+        for (let rotation of block) {
+            for (let i = 0; i < rotation.length; i++) {
+                rotation[i] = to_coord(rotation[i]);
+            }
+        }
+    }
+
+    window.onload = reset;
+
+    function reset() {
+        speed = 0.01;
+        score = 0;
+        framecount = 0;
+        reset_player();
+        reset_board();
+    }
+
+    function reset_board() {
+        board = [];
+        for (let y = 0; y < HEIGHT; y++) {
+            board[y] = [];
+            for (let x = 0; x < WIDTH; x++) {
+                board[y][x] = "white";
+            }
+        }
+    }
+
+    function random_block() {
+        return blocks[Math.floor(Math.random() * blocks.length)];
+    }
+
+    function reset_player() {
+        player = { x: Math.floor(WIDTH / 2), y: 0, block: random_block(), block_index: 0};
+    }
+
+    function to_coord(index) {
+        return {x: index % WIDTH, y: Math.floor(index / WIDTH)};
+    }
+
+    function logic() {
+        framecount++;
+
+        for (let offset of player.block[player.block_index]) {
+            let x = player.x + offset.x;
+            let y = player.y + offset.y + 1;
+            if (!in_bounds(x, y) || board[y][x] != "white") {
+                for (let offset of player.block[player.block_index]) {
+                    let x = player.x + offset.x;
+                    let y = player.y + offset.y;
+                    board[y][x] = "blue";
+                }
+                if (y == 1) {
+                    reset();
+                } else {
+                    reset_player();
+                }
+                break;
+            }
+        }
+
+        for (let y = 0; y < HEIGHT; y++) {
+            let full_row = true;
+            for (let x = 0; x < WIDTH; x++) {
+                if (board[y][x] == "white") {
+                    full_row = false;
+                    break;
+                }
+            }
+
+            if (full_row) {
+                speed += 0.001;
+                score++;
+                for (let _y = y; _y > 0; _y--) {
+                    for (let x = 0; x < WIDTH; x++) {
+                        board[_y][x] = board[_y-1][x];
+                    }
+                }
+            }
+        }
+
+        if (framecount > 1 / speed) {
+            player.y++;
+            framecount = 0;
+        }
+        
+        draw();
+    }
+    
+    function in_bounds(x, y) {
+        return x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT;
+    }
+
+    document.addEventListener("keydown", function(event) {
+        let old_player = JSON.parse(JSON.stringify(player))
+        if (event.key == "d") {
+            player.x++;
+        } else if (event.key == "a") {
+            player.x--;
+        } else if (event.key == "s") {
+            player.block_index = (player.block_index + 1) % player.block.length;
+        } else if (event.key == "w") {
+            let yoff = 0;
+            let found = false;
+            while (!found) {
+                for (let offset of player.block[player.block_index]) {
+                    let x = player.x + offset.x;
+                    let y = player.y + offset.y + yoff;
+                    if (!in_bounds(x, y) || board[y][x] != "white") {
+                        for (let offset of player.block[player.block_index]) {
+                            let x = player.x + offset.x;
+                            let y = player.y + offset.y + yoff - 1;
+                            board[y][x] = "blue";
+                        }
+                        reset_player();
+                        found = true;
+                        break;
+                    }
+                }
+                yoff++;
+            }
+                
+        }
+
+        for (let offset of player.block[player.block_index]) {
+            let x = player.x + offset.x;
+            let y = player.y + offset.y;
+            if (!in_bounds(x, y) || board[y][x] != "white") {
+                player = old_player;
+                break;
+            }
+        }
+    });
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (let y = 0; y < HEIGHT; y++) {
+            for (let x = 0; x < WIDTH; x++) {
+                ctx.fillStyle = "black";
+                ctx.fillRect(x * SIZE, y * SIZE, SIZE, SIZE);
+                ctx.fillStyle = board[y][x];
+                ctx.fillRect(x * SIZE, y * SIZE, SIZE * 0.97, SIZE * 0.97);
+            }
+        }
+
+        ctx.fillStyle = "green";
+        for (let offset of player.block[player.block_index]) {
+            ctx.fillRect((player.x + offset.x) * SIZE, (player.y + offset.y) * SIZE, SIZE, SIZE);
+        }
+
+        ctx.font = SIZE + "px Arial";
+        ctx.fillStyle = "red";
+        ctx.fillText(score, SIZE / 5, SIZE * 1.5);
+    }
+
+    framerate = 60;
+    setInterval(logic, 1000 / framerate);
+</script>
